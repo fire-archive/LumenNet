@@ -1,9 +1,9 @@
-Larku's fork of RakNet 4.081
+iFire's fork of RakNet 4.081
 ============
 
 Copyright (c) 2014, Oculus VR, Inc.
 
-Fork notes [updated 27-July-2015]
+Fork notes [updated 23-December-2015]
 ------------------------------------------
 
 This fork contains most of the pending pull requests from the official Oculus VR original.
@@ -12,11 +12,12 @@ This fork also contains other various fixes that I've found necessary - mostly a
 
 Package notes
 ------------------------------------------
-The Help directory contains index.html, which is full help documentation in HTML format
-The Source directory contain all files required for the core of Raknet and is used if you want to use the source in your program or create your own dll
-The Samples directory contains code samples and one game using an older version of Raknet.  The code samples each demonstrate one feature of Raknet.  The game samples cover several features.
-The lib directory contains libs for debug and release versions of RakNet and RakVoice
-There is a make file for linux users in the root directory.  Windows users can use projects under Samples\Project Samples
+
+* The Help directory contains index.html, which is full help documentation in HTML format
+* The Source directory contain all files required for the core of Raknet and is used if you want to use the source in your program or create your own dll
+* The Samples directory contains code samples and one game using an older version of Raknet.  The code samples each demonstrate one feature of Raknet.  The game samples cover several features.
+* The lib directory contains libs for debug and release versions of RakNet and RakVoice
+* There is a make file for linux users in the root directory.  Windows users can use projects under Samples\Project Samples
 
 C# support
 ------------------------------------------
@@ -270,9 +271,6 @@ _RAKNET_SUPPORT_UDPProxyServer=0
 _RAKNET_SUPPORT_UDPProxyCoordinator=0
 _RAKNET_SUPPORT_UDPForwarder=0
 
-
 Unreal engine
 -----------------------------------------
 See https://udn.epicgames.com/lists/showpost.php?list=unprog3&id=37697&lessthan=&show=20
-
-
