@@ -36,7 +36,7 @@ Create the RakNet static library project
 5.  Build Raknet using _Product->Build_
     You should get a successful compilation.
 
-## ![](spacer.gif)Testing the static library |
+## Testing the static library 
 
 A simple sample...
 
@@ -75,7 +75,15 @@ The steps to create the client project are the same as the ones for the Server:
 
 Running the sample
 
-You should now have 2 products ready to run (ChatExampleClient and ChatExampleServer). You can run one of them from inside Xcode, and run the other externally by right-clicking on it and selecting **"Open With External Editor"**. ## ![](spacer.gif)Compiling as a static library for iOS | Compiling Raknet as a static library for iOS is essentially the same as for Mac OS X. You can create a new project for the iOS library, or you can just create another Target for your Mac OS X static library project, and change what SDK to use: ![](xcode_changesdk.jpg) You can find some iOS samples in the **Samples/iOS** folder. ## ![](spacer.gif)
+You should now have 2 products ready to run (ChatExampleClient and ChatExampleServer). You can run one of them from inside Xcode, and run the other externally by right-clicking on it and selecting **"Open With External Editor"**. 
+
+## Compiling as a static library for iOS 
+
+Compiling Raknet as a static library for iOS is essentially the same as for Mac OS X. You can create a new project for the iOS library, or you can just create another Target for your Mac OS X static library project, and change what SDK to use:
+
+![](xcode_changesdk.jpg) 
+
+You can find some iOS samples in the **Samples/iOS** folder.
 
 ## See Also
 
