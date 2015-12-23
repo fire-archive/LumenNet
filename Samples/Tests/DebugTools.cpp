@@ -13,6 +13,8 @@
 
 #include "DebugTools.h"
 
+#undef max
+
 DebugTools::DebugTools(void)
 {
 }
