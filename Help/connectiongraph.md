@@ -1,6 +1,6 @@
 # Connection Graph - Plugin Interface Implementation
 
-<span class="RakNetBlueHeader">Connection Graph Implementation Overview</span>                                                                                                                       
+**Connection Graph Implementation Overview**                                                                                                            
 The Connection Graph plugin maintains a graph of connections for the entire network, so every peer knows about every other peer. The graph of connections is updated as new systems connect or disconnect from the network.    
 
 You can optionally specify a password which you can use to allow certain systems to take part on the graph.                                                                                                                    
