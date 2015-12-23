@@ -1,7 +1,4 @@
-![Oculus VR, Inc.](RakNet_Icon_Final-copy.jpg)
-
-|---------------------------------------------|
-| ![](spacer.gif)UDT based congestion control |
+# UDT based congestion control 
 
 The UDT Congestion Control Algorithm
 ====================================
@@ -83,15 +80,15 @@ UDT needs to update RTT (Round Trip Time) and RTO (Retransmission Time Out). UDT
 
 Upon receiving the ACK2, UDT calculates the RTT by comparing the difference between the ACK2 arrival time and the ACK departure time. In the following formula, “RTT” is the current value that the receiver maintains and “rtt” is the recent value that was just calculated from ACK/ACK2.
 
-*RTT = RTT \* 0.875 + rtt \* 0.125*
+RTT = RTT \* 0.875 + rtt \* 0.125
 
-*RTTVar = RTTVar \* 0.875 + abs(RTT - rtt)) \* 0.125*
+RTTVar = RTTVar \* 0.875 + abs(RTT - rtt)) \* 0.125
 
 The RTT value should be sent back to the sender, e.g., in ACK. UDT does not transmit RTTVar to the peer side. The peer side will update its own RTT and RTTVar values using the same formulae as above, in which case “rtt” is the most recent value it receives, e.g., carried by an incoming ACK.
 
 Both RTT and RTTVar are changing variables. RTT is not a fixed value. It can be changed by congestion or even route change. RTTVar records the variance of the RTT value and is required to compute RTO:
 
-*RTO = RTT + 4 \* RTTVar*
+RTO = RTT + 4 \* RTTVar
 
 **Note 2.2:** A UDT socket can both send and receive. RTT, RTTVar, and RTO are not just sender specific variables. They are shared by both the sender and the receiver (of the same socket). When a UDT socket receives data, it updates its local RTT and RTTVar, which can be used for its own sender as well.
 
@@ -101,13 +98,13 @@ RTO is the time that an acknowledgement is expected after a data packet is sent 
 
 Since UDT only acknowledges every SYN time, in UDT
 
-*RTO = RTT + 4 \* RTTVar + SYN*
+RTO = RTT + 4 \* RTTVar + SYN
 
 **Implementation Note 2.4:** It is important to have a lower threshold for RTO. If RTO is too small, retransmission can be easily triggered by a busy CPU, etc. UDT uses 100ms as the lower threshold.
 
 **Implementation Note 2.5:** Continuous timeout should increase the RTO value. In UDT, a counter (ExpCount) is used to track the number of continuous timeout.
 
-*RTO = ExpCount \* (RTT + 4 \* RTTVar) + SYN*
+RTO = ExpCount \* (RTT + 4 \* RTTVar) + SYN
 
 Packet Arrival Rate
 -------------------
@@ -139,13 +136,13 @@ In the regular phase (post slow start), the rate increase can be defined accordi
 
 First, the number of sent packets to be increased in the next SYN period (inc) is calculated as:
 
-*if (B \<= C)*
+if (B \<= C)
 
-*inc = 1/MSS;*
+inc = 1/MSS;
 
-*else*
+else
 
-*inc = max(10^(ceil(log10((B-C)\*MSS\*8))) \* Beta/MSS, 1/MSS);*
+inc = max(10^(ceil(log10((B-C)\*MSS\*8))) \* Beta/MSS, 1/MSS);
 
 where B is the estimated link capacity sent back by the receiver (Section 2.2) and C is the current sending speed (C = 1/SND) . Both are counted as packets per second. MSS is the fixed/maximum size of UDT packet counted in bytes, usually MSS = MTU – UDP/UDT packet header size. Beta is a constant value of 0.0000015.
 
@@ -153,11 +150,11 @@ where B is the estimated link capacity sent back by the receiver (Section 2.2) a
 
 The SND value is the updated as:
 
-*SND = (SND \* SYN) / (SND \* inc + SYN).*
+SND = (SND \* SYN) / (SND \* inc + SYN).
 
 Meanwhile, the congestion window size should be updated by:
 
-*CWND = AS \* (RTT + SYN) + 16*
+CWND = AS \* (RTT + SYN) + 16
 
 where AS is the packet arrival rate sent back by the receiver (Section 2.4).
 
@@ -188,33 +185,33 @@ AvgNAKNum is the average number of NAKs during a congestion period. NAKCount is 
 
 *If this NAK starts a new congestion period*
 
-*{*
+{
 
-*increase SND = SND \* 1.125;*
+increase SND = SND \* 1.125;
 
-*Update AvgNAKNum;*
+Update AvgNAKNum;
 
-*Reset NAKCount to 1;*
+Reset NAKCount to 1;
 
-*Compute DecRandom to a random (uniform distribution) number between 1 and AvgNAKNum;*
+Compute DecRandom to a random (uniform distribution) number between 1 and AvgNAKNum;
 
-*Reset DecCount to 1;*
+Reset DecCount to 1;
 
-*Reset Update LastDecSeq;*
+Reset Update LastDecSeq;
 
-*Stop.*
+Stop.
 
-*}*
+}
 
-*If (DecCount \<= 5) and (NAKCount == DecCount \* DecRandom)*
+If (DecCount \<= 5) and (NAKCount == DecCount \* DecRandom)
 
-*{*
+{
 
-*Update SND period: SND = SND \* 1.125;*
+Update SND period: SND = SND \* 1.125;
 
-*Increase DecCount by 1;*
+Increase DecCount by 1;
 
-*}*
+}
 
 *Update LastDecSeq and NAKCount.*
 
@@ -233,27 +230,7 @@ Because RTO is actually greater than RTT (Section 2.3), there should not be more
 
 Finally, after the aggregate continuous timeouts exceeds a threshold, the connection should be deemed to be broken.
 
-|-------------------------|
-| ![](spacer.gif)See Also |
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td align="left"><p><a href="index.html">Index</a><br /></p></td>
-</tr>
-</tbody>
-</table>
+## See Also
 
-<table>
-<colgroup>
-<col width="100%" />
-</colgroup>
-<tbody>
-<tr class="odd">
-<td align="left"><p><br /></p></td>
-</tr>
-</tbody>
-</table>
+* [Index](index.html)
