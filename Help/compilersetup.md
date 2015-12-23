@@ -18,17 +18,17 @@ Creating a DLL
 8.  Optionally set your [preprocessor directives.](preprocessordirectives.html)
 9.  Then hit F7 or the equivalent to build your DLL and Lib.
 
-| [![](makedllsmall.jpg)](makedll.jpg)
- |
-| **Creating an empty DLL project in .net 2003** |
+[![](makedllsmall.jpg)](makedll.jpg)
+ 
+**Creating an empty DLL project in .net 2003** 
 
-| [![](multithreadeddebugsmall.jpg)](multithreadeddebug.jpg)
- |
-| **Setting Multithreaded debug in .net 2003** |
+[![](multithreadeddebugsmall.jpg)](multithreadeddebug.jpg)
+ 
+**Setting Multithreaded debug in .net 2003** 
 
-| [![](ws2_32includesmall.jpg)](ws2_32include.jpg)
- |
-| **Including ws2_32.lib in .net 2003** |
+[![](ws2_32includesmall.jpg)](ws2_32include.jpg)
+ 
+**Including ws2_32.lib in .net 2003** 
 
 Game Setup
 
@@ -49,13 +49,13 @@ For more detail, refer to [Detailed Implementation](detailedimplementation.html)
 4.  Set an additional include path to include the RakNet source (if you copied the source files to a different directory).
 5.  Optionally set your [preprocessor directives.](preprocessordirectives.html)
 
-| [![](multithreadeddebugsmall.jpg)](multithreadeddebug.jpg)
- |
-| **Setting Multithreaded debug in .net 2003** |
+[![](multithreadeddebugsmall.jpg)](multithreadeddebug.jpg)
 
-| [![](ws2_32includesmall.jpg)](ws2_32include.jpg)
- |
-| **Including ws2_32.lib in .net 2003** |
+**Setting Multithreaded debug in .net 2003**
+
+[![](ws2_32includesmall.jpg)](ws2_32include.jpg)
+
+**Including ws2_32.lib in .net 2003**
 
 ## 3rd party dependencies 
 
