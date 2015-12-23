@@ -1,6 +1,6 @@
 # Before you begin 
 
-## Use the source, static lib ,or a DLL?
+## Use the source, static lib, or a DLL?
 
 RakNet includes the source, along with the projects to make the DLL and static lib, and samples. It no longer includes pre-built DLLs or libraries - this is due to incompatibilities across compilers. We recommend using the source directly, however you can also use the DLL or static lib projects to build your own. Projects to build the DLL/Static Lib, and the samples, are provided for Microsoft Visual Studio .Net 2003 and 2005\. Users of other compilers will have to make their own projects.
 
