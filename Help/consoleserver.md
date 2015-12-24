@@ -1,4 +1,6 @@
-# Command Console Server Overview - Use the console to remotely control a game server
+# Command Console Server Overview 
+
+## Use the console to remotely control a game server
 
 Sometimes it is useful to control a server when you are not in front of that particular computer. This can arise due to server hosting, where the host is located offsite. Or perhaps you have many servers, and you want to control them via a script. The ConsoleServer, CommandParserInterface, and TransportInterface are three classes that work together to meet these needs.
 
