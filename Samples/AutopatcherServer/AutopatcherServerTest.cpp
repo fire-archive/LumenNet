@@ -45,7 +45,7 @@ char PATH_TO_XDELTA_EXE[MAX_PATH];
 // I override MakePatch to use XDelta in this case
 class AutopatcherPostgreRepository2_WithXDelta : public RakNet::AutopatcherPostgreRepository2
 {
-	bool MakePatch(const char *oldFile, const char *newFile, char **patch, unsigned int *patchLength, int *patchAlgorithm)
+	int MakePatch(const char *oldFile, const char *newFile, char **patch, unsigned int *patchLength, int *patchAlgorithm)
 	{
 		FILE *fpOld = fopen(oldFile, "rb");
 		fseek(fpOld, 0, SEEK_END);
@@ -170,10 +170,12 @@ int main(int argc, char **argv)
 	printf("started.\n");
 
 	printf("Enter database password:\n");
-	char connectionString[256],password[128];
-	char username[256];
+	const int kMaxPasswordSize = 128;
+	const int kMaxConnectionStringSize = 256;
+	char connectionString[kMaxConnectionStringSize],password[kMaxPasswordSize];
+	char username[kMaxConnectionStringSize];
 	strcpy(username, "postgres");
-	gets(password);
+	fgets(password, kMaxPasswordSize, stdin);
 	if (password[0]==0) strcpy(password, "aaaa");
 	strcpy(connectionString, "user=");
 	strcat(connectionString, username);
