@@ -143,7 +143,7 @@ public:
 
 	/// \brief Returns how many files are available for upload
 	/// \return How many files are available for upload
-	unsigned GetNumberOfFilesForUpload(void) const;
+	size_t GetNumberOfFilesForUpload(void) const;
 
 	/// \brief Normally, if a remote system requests files, those files are all loaded into memory and sent immediately.
 	/// \details This function allows the files to be read in incremental chunks, saving memory

@@ -44,18 +44,18 @@ struct FileListReceiver
 	FileListTransferCBInterface *downloadHandler;
 	SystemAddress allowedSender;
 	unsigned short setID;
-	unsigned setCount;
-	unsigned setTotalCompressedTransmissionLength;
-	unsigned setTotalFinalLength;
-	unsigned setTotalDownloadedLength;
+	size_t setCount;
+	size_t setTotalCompressedTransmissionLength;
+	size_t setTotalFinalLength;
+	size_t setTotalDownloadedLength;
 	bool gotSetHeader;
 	bool deleteDownloadHandler;
 	bool isCompressed;
 	int  filesReceived;
-	DataStructures::Map<unsigned int, FLR_MemoryBlock> pushedFiles;
+	DataStructures::Map<size_t, FLR_MemoryBlock> pushedFiles;
 
 	// Notifications
-	unsigned int partLength;
+	size_t partLength;
 
 };
 
@@ -352,9 +352,9 @@ bool FileListTransfer::DecodeFile(Packet *packet, bool isTheFullFile)
 	onFileStruct.senderSystemAddress=packet->systemAddress;
 	onFileStruct.senderGuid=packet->guid;
 
-	unsigned int partCount=0;
-	unsigned int partTotal=0;
-	unsigned int partLength=0;
+	size_t partCount=0;
+	size_t partTotal=0;
+	size_t partLength=0;
 	onFileStruct.fileData=0;
 	if (isTheFullFile==false)
 	{

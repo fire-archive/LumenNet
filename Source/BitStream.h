@@ -60,7 +60,7 @@ namespace RakNet
 		/// \details There is no benefit to calling this, unless you know exactly how many bytes you need and it is greater than BITSTREAM_STACK_ALLOCATION_SIZE.
 		/// In that case all it does is save you one or more realloc calls.
 		/// \param[in] initialBytesToAllocate the number of bytes to pre-allocate.
-		BitStream( const unsigned int initialBytesToAllocate );
+		BitStream( const size_t initialBytesToAllocate );
 
 		/// \brief Initialize the BitStream, immediately setting the data it contains to a predefined pointer.
 		/// \details Set \a _copyData to true if you want to make an internal copy of the data you are passing. Set it to false to just save a pointer to the data.
@@ -72,7 +72,7 @@ namespace RakNet
 		/// \param[in] _data An array of bytes.
 		/// \param[in] lengthInBytes Size of the \a _data.
 		/// \param[in] _copyData true or false to make a copy of \a _data or not.
-		BitStream( unsigned char* _data, const unsigned int lengthInBytes, bool _copyData );
+		BitStream( unsigned char* _data, const size_t lengthInBytes, bool _copyData );
 
 		// Destructor
 		~BitStream();
@@ -139,7 +139,7 @@ namespace RakNet
 		/// \param[in] inOutByteArray a byte buffer
 		/// \param[in] numberOfBytes the size of \a input in bytes
 		/// \return true if \a writeToBitstream is true.  true if \a writeToBitstream is false and the read was successful.  false if \a writeToBitstream is false and the read was not successful.
-		bool Serialize(bool writeToBitstream,  char* inOutByteArray, const unsigned int numberOfBytes );
+		bool Serialize(bool writeToBitstream,  char* inOutByteArray, const size_t numberOfBytes );
 
 		/// \brief Serialize a float into 2 bytes, spanning the range between \a floatMin and \a floatMax
 		/// \param[in] writeToBitstream true to write from your data to this bitstream.  False to read from this bitstream and write to your data
@@ -325,7 +325,7 @@ namespace RakNet
 		/// \brief Write an array or casted stream or raw data.  This does NOT do endian swapping.
 		/// \param[in] inputByteArray a byte buffer
 		/// \param[in] numberOfBytes the size of \a input in bytes
-		void Write( const char* inputByteArray, const unsigned int numberOfBytes );
+		void Write( const char* inputByteArray, const size_t numberOfBytes );
 
 		/// \brief Write one bitstream to another.
 		/// \param[in] numberOfBits bits to write
@@ -401,7 +401,7 @@ namespace RakNet
 		/// \param[in] output The result byte array. It should be larger than @em numberOfBytes.
 		/// \param[in] numberOfBytes The number of byte to read
 		/// \return true on success false if there is some missing bytes.
-		bool Read( char* output, const unsigned int numberOfBytes );
+		bool Read( char* output, const size_t numberOfBytes );
 
 		/// \brief Read a float into 2 bytes, spanning the range between \a floatMin and \a floatMax
 		/// \param[in] outFloat The float to read
@@ -490,7 +490,7 @@ namespace RakNet
 
 		/// \brief Ignore data we don't intend to read
 		/// \param[in] numberOfBits The number of bytes to ignore
-		void IgnoreBytes( const unsigned int numberOfBytes );
+		void IgnoreBytes( const size_t numberOfBytes );
 
 		/// \brief Move the write pointer to a position on the array.
 		/// \param[in] offset the offset from the start of the array.
@@ -548,7 +548,7 @@ namespace RakNet
 		/// ReadAlignedBits at the corresponding read position.
 		/// \param[in] inByteArray The data
 		/// \param[in] numberOfBytesToWrite The size of input.
-		void WriteAlignedBytes( const unsigned char *inByteArray, const unsigned int numberOfBytesToWrite );
+		void WriteAlignedBytes( const unsigned char *inByteArray, const size_t numberOfBytesToWrite );
 
 		// Endian swap bytes already in the bitstream
 		void EndianSwapBytes( int byteOffset, int length );
@@ -557,7 +557,7 @@ namespace RakNet
 		/// \param[in] inByteArray The data
 		/// \param[in] inputLength The size of input.
 		/// \param[in] maxBytesToWrite Max bytes to write
-		void WriteAlignedBytesSafe( const char *inByteArray, const unsigned int inputLength, const unsigned int maxBytesToWrite );
+		void WriteAlignedBytesSafe( const char *inByteArray, const size_t inputLength, const size_t maxBytesToWrite );
 
 		/// \brief Read bits, starting at the next aligned bits. 
 		/// \details Note that the modulus 8 starting offset of the sequence must be the same as
@@ -566,20 +566,20 @@ namespace RakNet
 		/// \param[in] inOutByteArray The byte array larger than @em numberOfBytesToRead
 		/// \param[in] numberOfBytesToRead The number of byte to read from the internal state
 		/// \return true if there is enough byte.
-		bool ReadAlignedBytes( unsigned char *inOutByteArray, const unsigned int numberOfBytesToRead );
+		bool ReadAlignedBytes( unsigned char *inOutByteArray, const size_t numberOfBytesToRead );
 
 		/// \brief Reads what was written by WriteAlignedBytesSafe.
 		/// \param[in] inOutByteArray The data
 		/// \param[in] maxBytesToRead Maximum number of bytes to read
 		/// \return true on success, false on failure.
 		bool ReadAlignedBytesSafe( char *inOutByteArray, int &inputLength, const int maxBytesToRead );
-		bool ReadAlignedBytesSafe( char *inOutByteArray, unsigned int &inputLength, const unsigned int maxBytesToRead );
+		bool ReadAlignedBytesSafe( char *inOutByteArray, size_t &inputLength, const size_t maxBytesToRead );
 
 		/// \brief Same as ReadAlignedBytesSafe() but allocates the memory for you using new, rather than assuming it is safe to write to
 		/// \param[in] outByteArray outByteArray will be deleted if it is not a pointer to 0
 		/// \return true on success, false on failure.
-		bool ReadAlignedBytesSafeAlloc( char **outByteArray, int &inputLength, const unsigned int maxBytesToRead );
-		bool ReadAlignedBytesSafeAlloc( char **outByteArray, unsigned int &inputLength, const unsigned int maxBytesToRead );
+		bool ReadAlignedBytesSafeAlloc( char **outByteArray, int &inputLength, const int maxBytesToRead );
+		bool ReadAlignedBytesSafeAlloc( char **outByteArray, size_t &inputLength, const size_t maxBytesToRead );
 
 		/// \brief Align the next write and/or read to a byte boundary.  
 		/// \details This can be used to 'waste' bits to byte align for efficiency reasons It
@@ -635,7 +635,7 @@ namespace RakNet
 		bool Read(unsigned char *varString);
 
 		/// Write zeros until the bitstream is filled up to \a bytes
-		void PadWithZeroToByteLength( unsigned int bytes );
+		void PadWithZeroToByteLength( size_t bytes );
 
 		/// Get the number of leading zeros for a number
 		/// \param[in] x Number to test
@@ -901,8 +901,8 @@ namespace RakNet
 		inline static bool IsNetworkOrder(void) {bool r = IsNetworkOrderInternal(); return r;}
 		// Not inline, won't compile on PC due to winsock include errors
 		static bool IsNetworkOrderInternal(void);
-		static void ReverseBytes(unsigned char *inByteArray, unsigned char *inOutByteArray, const unsigned int length);
-		static void ReverseBytesInPlace(unsigned char *inOutData,const unsigned int length);
+		static void ReverseBytes(unsigned char *inByteArray, unsigned char *inOutByteArray, const size_t length);
+		static void ReverseBytesInPlace(unsigned char *inOutData,const size_t length);
 
 	private:
 
@@ -919,10 +919,10 @@ namespace RakNet
 		}
 
 		/// \brief Assume the input source points to a native type, compress and write it.
-		void WriteCompressed( const unsigned char* inByteArray, const unsigned int size, const bool unsignedData );
+		void WriteCompressed( const unsigned char* inByteArray, const size_t size, const bool unsignedData );
 
 		/// \brief Assume the input source points to a compressed native type. Decompress and read it.
-		bool ReadCompressed( unsigned char* inOutByteArray,	const unsigned int size, const bool unsignedData );
+		bool ReadCompressed( unsigned char* inOutByteArray,	const size_t size, const bool unsignedData );
 
 
 		BitSize_t numberOfBitsUsed;
@@ -1000,7 +1000,7 @@ namespace RakNet
 			return true;
 		}
 
-		inline bool BitStream::Serialize(bool writeToBitstream, char* inOutByteArray, const unsigned int numberOfBytes )
+		inline bool BitStream::Serialize(bool writeToBitstream, char* inOutByteArray, const size_t numberOfBytes )
 		{
 			if (writeToBitstream)
 				Write(inOutByteArray, numberOfBytes);

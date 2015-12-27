@@ -31,7 +31,7 @@ using namespace RakNet;
 class DDTCallback : public FileListTransferCBInterface
 {
 public:
-	unsigned subdirLen;
+	size_t subdirLen;
 	char outputSubdir[512];
 	FileListTransferCBInterface *onFileCallback;
 
@@ -46,7 +46,7 @@ public:
 		{
 			strcpy(fullPathToDir, outputSubdir);
 			strcat(fullPathToDir, onFileStruct->fileName+subdirLen);
-			WriteFileWithDirectories(fullPathToDir, (char*)onFileStruct->fileData, (unsigned int ) onFileStruct->byteLengthOfThisFile);
+			WriteFileWithDirectories(fullPathToDir, (char*)onFileStruct->fileData, (size_t ) onFileStruct->byteLengthOfThisFile);
 		}
 		else
 			fullPathToDir[0]=0;
@@ -95,7 +95,7 @@ void DirectoryDeltaTransfer::SetFileListTransferPlugin(FileListTransfer *flt)
 	{
 		DataStructures::List<FileListProgress*> fileListProgressList;
 		fileListTransfer->GetCallbacks(fileListProgressList);
-		unsigned int i;
+		size_t i;
 		for (i=0; i < fileListProgressList.Size(); i++)
 			availableUploads->RemoveCallback(fileListProgressList[i]);
 	}
@@ -106,7 +106,7 @@ void DirectoryDeltaTransfer::SetFileListTransferPlugin(FileListTransfer *flt)
 	{
 		DataStructures::List<FileListProgress*> fileListProgressList;
 		flt->GetCallbacks(fileListProgressList);
-		unsigned int i;
+		size_t i;
 		for (i=0; i < fileListProgressList.Size(); i++)
 			availableUploads->AddCallback(fileListProgressList[i]);
 	}
@@ -148,7 +148,7 @@ unsigned short DirectoryDeltaTransfer::DownloadFromSubdirectory(FileList &localF
 	transferCallback = RakNet::OP_NEW<DDTCallback>( _FILE_AND_LINE_ );
 	if (subdir && subdir[0])
 	{
-		transferCallback->subdirLen=(unsigned int)strlen(subdir);
+		transferCallback->subdirLen=(size_t)strlen(subdir);
 		if (subdir[transferCallback->subdirLen-1]!='/' && subdir[transferCallback->subdirLen-1]!='\\')
 			transferCallback->subdirLen++;
 	}
@@ -234,7 +234,7 @@ PluginReceiveResult DirectoryDeltaTransfer::OnReceive(Packet *packet)
 	return RR_CONTINUE_PROCESSING;
 }
 
-unsigned DirectoryDeltaTransfer::GetNumberOfFilesForUpload(void) const
+size_t DirectoryDeltaTransfer::GetNumberOfFilesForUpload(void) const
 {
 	return availableUploads->fileList.Size();
 }

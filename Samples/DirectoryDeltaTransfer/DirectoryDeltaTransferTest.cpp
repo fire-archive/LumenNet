@@ -40,7 +40,7 @@ public:
 		OnFileStruct *onFileStruct)
 	{
 		assert(onFileStruct->byteLengthOfThisFile >= onFileStruct->bytesDownloadedForThisFile);
-        printf("%i. (100%%) %i/%i %s %ib / %ib\n", onFileStruct->setID, onFileStruct->fileIndex+1, onFileStruct->numberOfFilesInThisSet, onFileStruct->fileName, onFileStruct->byteLengthOfThisFile, onFileStruct->byteLengthOfThisSet);
+        printf("%i. (100%%) %u/%u %s %ub / %ub\n", onFileStruct->setID, onFileStruct->fileIndex+1, onFileStruct->numberOfFilesInThisSet, onFileStruct->fileName, onFileStruct->byteLengthOfThisFile, onFileStruct->byteLengthOfThisSet);
 
 		// Return true to have RakNet delete the memory allocated to hold this file.
 		// False if you hold onto the memory, and plan to delete it yourself later
@@ -50,7 +50,7 @@ public:
 	virtual void OnFileProgress(FileProgressStruct *fps)
 	{
 		assert(fps->onFileStruct->byteLengthOfThisFile >= fps->onFileStruct->bytesDownloadedForThisFile);
-		printf("%i (%i%%) %i/%i %s %ib / %ib\n", fps->onFileStruct->setID, (int) (100.0*(double)fps->partCount/(double)fps->partTotal),
+		printf("%i (%i%%) %u/%u %s %ub / %ub\n", fps->onFileStruct->setID, (int) (100.0*(double)fps->partCount/(double)fps->partTotal),
 			fps->onFileStruct->fileIndex+1,
 			fps->onFileStruct->numberOfFilesInThisSet,
 			fps->onFileStruct->fileName,

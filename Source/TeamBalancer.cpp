@@ -791,7 +791,7 @@ bool TeamBalancer::TeamWouldBeUnderpopulatedOnLeave(TeamId teamId, unsigned int 
 TeamId TeamBalancer::GetSmallestNonFullTeam(void) const
 {
 	TeamId idx;
-	unsigned long smallestTeamCount=MAX_UNSIGNED_LONG;
+	unsigned long smallestTeamCount=MAX_UNSIGNED_LONG_LONG;
 	TeamId smallestTeamIndex = UNASSIGNED_TEAM_ID;
 	for (idx=0; idx < teamMemberCounts.Size(); idx++)
 	{

@@ -250,7 +250,7 @@ void AutopatcherServer::OnClosedConnection(const SystemAddress &systemAddress, R
 {
 	RemoveFromThreadPool(systemAddress);
 
-	unsigned int i=0;
+	size_t i=0;
 	patchingUsersMutex.Lock();
 	while (i < patchingUsers.Size())
 	{
@@ -407,7 +407,7 @@ AutopatcherServer::ResultTypeAndBitstream* GetChangelistSinceDateCB(AutopatcherS
 }
 PluginReceiveResult AutopatcherServer::OnGetChangelistSinceDate(Packet *packet)
 {
-	RakNet::BitStream inBitStream(packet->data, packet->length, false);
+	RakNet::BitStream inBitStream(packet->data, (size_t) packet->length, false);
 	ThreadData threadData;
 	threadData.clientList=0;
 	inBitStream.IgnoreBits(8);
@@ -608,7 +608,7 @@ PluginReceiveResult AutopatcherServer::OnGetPatch(Packet *packet)
 		FileList patchList;
 		bool cacheUpdateFailed=false;
 
-		unsigned int i,j;
+		size_t i,j;
 		// FileList is the list of all files missing or changed as determined by the client
 		for (i=0; i < threadData.clientList->fileList.Size(); i++)
 		{
@@ -773,7 +773,7 @@ bool AutopatcherServer::IncrementPatchingUserCount(SystemAddress sa)
 }
 bool AutopatcherServer::DecrementPatchingUserCount(SystemAddress sa)
 {
-	unsigned int i;
+	size_t i;
 	patchingUsersMutex.Lock();
 	for (i=0; i < patchingUsers.Size(); i++)
 	{
@@ -794,11 +794,11 @@ bool AutopatcherServer::PatchingUserLimitReached(void) const
 
 	return patchingUsers.Size()>=maxConcurrentUsers;
 }
-void AutopatcherServer::SetMaxConurrentUsers(unsigned int _maxConcurrentUsers)
+void AutopatcherServer::SetMaxConurrentUsers(size_t _maxConcurrentUsers)
 {
 	maxConcurrentUsers=_maxConcurrentUsers;
 }
-unsigned int AutopatcherServer::GetMaxConurrentUsers(void) const
+size_t AutopatcherServer::GetMaxConurrentUsers(void) const
 {
 	return maxConcurrentUsers;
 }
@@ -853,7 +853,7 @@ void AutopatcherServer::SetAllowDownloadOfOriginalUnmodifiedFiles(bool allow)
 {
 	allowDownloadOfOriginalUnmodifiedFiles = allow;
 }
-unsigned int AutopatcherServer::GetFilePart( const char *filename, unsigned int startReadBytes, unsigned int numBytesToRead, void *preallocatedDestination, FileListNodeContext context)
+size_t AutopatcherServer::GetFilePart( const char *filename, size_t startReadBytes, size_t numBytesToRead, void *preallocatedDestination, FileListNodeContext context)
 {
 	/*
 	int offset;

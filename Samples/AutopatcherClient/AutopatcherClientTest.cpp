@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Kbhit.h"
+#include <iostream>
+#include <filesystem>
 
 #include "GetTime.h"
 #include "RakPeerInterface.h"
@@ -28,8 +30,8 @@
 #include "Gets.h"
 #include "RakSleep.h"
 
-char WORKING_DIRECTORY[MAX_PATH];
-char PATH_TO_XDELTA_EXE[MAX_PATH];
+std::experimental::filesystem::path WORKING_DIRECTORY;
+std::experimental::filesystem::path PATH_TO_XDELTA_EXE;
 
 class TestCB : public RakNet::AutopatcherClientCBInterface
 {
@@ -58,7 +60,7 @@ public:
 			RakAssert(0);
 
 
-		printf("%i. (100%%) %i/%i %s %ib / %ib\n", onFileStruct->setID, onFileStruct->fileIndex+1, onFileStruct->numberOfFilesInThisSet,
+		printf("%i. (100%%) %u/%u %s %ub / %ub\n", onFileStruct->setID, onFileStruct->fileIndex+1, onFileStruct->numberOfFilesInThisSet,
 			onFileStruct->fileName, onFileStruct->byteLengthOfThisFile,
 			onFileStruct->byteLengthOfThisSet);
 
@@ -68,9 +70,11 @@ public:
 
 	virtual void OnFileProgress(FileProgressStruct *fps)
 	{
-		printf("Downloading: %i. (%i%%) %i/%i %s %ib/%ib %ib/%ib total\n", fps->onFileStruct->setID,
-			(int) (100.0*(double)fps->onFileStruct->bytesDownloadedForThisFile/(double)fps->onFileStruct->byteLengthOfThisFile),
-			fps->onFileStruct->fileIndex+1, fps->onFileStruct->numberOfFilesInThisSet, fps->onFileStruct->fileName,
+		printf("Downloading: %i. (%i%%) %u/%u %s %ub/%ub %ub/%ub total\n", fps->onFileStruct->setID,
+			(size_t) (100.0*(double)fps->onFileStruct->bytesDownloadedForThisFile/(double)fps->onFileStruct->byteLengthOfThisFile),
+			fps->onFileStruct->fileIndex+1,
+			fps->onFileStruct->numberOfFilesInThisSet, 
+			fps->onFileStruct->fileName,
 			fps->onFileStruct->bytesDownloadedForThisFile,
 			fps->onFileStruct->byteLengthOfThisFile,			
 			fps->onFileStruct->bytesDownloadedForThisSet,
@@ -86,17 +90,20 @@ public:
 		}
 		else
 		{
-			char buff[128];
+			std::string buff;
 			RakNet::TimeUS time = RakNet::GetTimeUS();
 #if defined(_WIN32)
-			sprintf(buff, "%I64u", time);
+			buff += time;
 #else
-			sprintf(buff, "%llu", (long long unsigned int) time);
+			buff += time;
 #endif
 
-			char pathToPatch1[MAX_PATH], pathToPatch2[MAX_PATH];
-			sprintf(pathToPatch1, "%s/patchClient_%s.tmp", WORKING_DIRECTORY, buff);
-			FILE *fpPatch = fopen(pathToPatch1, "wb");
+			std::experimental::filesystem::path pathToPatch1, pathToPatch2;
+			pathToPatch1 /= WORKING_DIRECTORY;
+			pathToPatch1 /= "patchClient_";
+			pathToPatch1 = pathToPatch1.concat(buff).concat(".tmp");
+			auto pathToPatch1Temp = pathToPatch1.string();
+			FILE *fpPatch = fopen(pathToPatch1Temp.c_str(), "wb");
 			if (fpPatch==0)
 				return PC_ERROR_PATCH_TARGET_MISSING;
 			fwrite(patchContents, 1, patchSize, fpPatch);
@@ -113,22 +120,26 @@ public:
 			shellExecuteInfo.fMask = SEE_MASK_NOASYNC | SEE_MASK_NO_CONSOLE;
 			shellExecuteInfo.hwnd = NULL;
 			shellExecuteInfo.lpVerb = "open";
-			shellExecuteInfo.lpFile = PATH_TO_XDELTA_EXE;
+			shellExecuteInfo.lpFile = (LPCSTR) PATH_TO_XDELTA_EXE.c_str();
 			shellExecuteInfo.lpParameters = commandLine;
-			shellExecuteInfo.lpDirectory = WORKING_DIRECTORY;
+			shellExecuteInfo.lpDirectory = (LPCSTR) WORKING_DIRECTORY.c_str();
 			shellExecuteInfo.nShow = SW_SHOWNORMAL;
 			shellExecuteInfo.hInstApp = NULL;
 			ShellExecuteEx(&shellExecuteInfo);
 
 			// ShellExecute(NULL, "open", PATH_TO_XDELTA_EXE, commandLine, WORKING_DIRECTORY, SW_SHOWNORMAL);
 
-			sprintf(pathToPatch2, "%s/newFile_%s.tmp", WORKING_DIRECTORY, buff);
-			fpPatch = fopen(pathToPatch2, "r+b");
+			pathToPatch2 /= WORKING_DIRECTORY;
+			pathToPatch2 /= "newFile_";
+			pathToPatch2 = pathToPatch2.concat(buff).concat(".tmp");
+			auto pathToPatch2Temp = pathToPatch2.string();
+
+			fpPatch = fopen(pathToPatch2Temp.c_str(), "r+b");
 			RakNet::TimeUS stopWaiting = time + 60000000;
 			while (fpPatch==0 && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
-				fpPatch = fopen(pathToPatch2, "r+b");
+				fpPatch = fopen(pathToPatch2Temp.c_str(), "r+b");
 			}
 			if (fpPatch==0)
 			{
@@ -143,15 +154,15 @@ public:
 			fread(*newFileContents, 1, *newFileSize, fpPatch);
 			fclose(fpPatch);
 
-			int unlinkRes1 = _unlink(pathToPatch1);
-			int unlinkRes2 = _unlink(pathToPatch2);
+			int unlinkRes1 = _unlink(pathToPatch1Temp.c_str());
+			int unlinkRes2 = _unlink(pathToPatch2Temp.c_str());
 			while ((unlinkRes1!=0 || unlinkRes2!=0) && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
 				if (unlinkRes1!=0)
-					unlinkRes1 = _unlink(pathToPatch1);
+					unlinkRes1 = _unlink(pathToPatch1Temp.c_str());
 				if (unlinkRes2!=0)
-					unlinkRes2 = _unlink(pathToPatch2);
+					unlinkRes2 = _unlink(pathToPatch2Temp.c_str());
 			}
 
 			if (unlinkRes1!=0)
@@ -250,19 +261,22 @@ int main(int argc, char **argv)
 	if (patchImmediately==false)
 	{
 		printf("Optional: Enter path to xdelta exe: ");
-		Gets(PATH_TO_XDELTA_EXE, sizeof(PATH_TO_XDELTA_EXE));
-		// https://code.google.com/p/xdelta/downloads/list
-		if (PATH_TO_XDELTA_EXE[0]==0)
-			strcpy(PATH_TO_XDELTA_EXE, "c:/xdelta3-3.0.6-win32.exe");
+		std::string xdeltaPath;
+		std::getline(std::cin, xdeltaPath);
+		PATH_TO_XDELTA_EXE.assign(xdeltaPath);
 
-		if (PATH_TO_XDELTA_EXE[0])
+		// https://code.google.com/p/xdelta/downloads/list
+		if (PATH_TO_XDELTA_EXE.empty())
+			PATH_TO_XDELTA_EXE /= "c:/xdelta3-x86_64-3.0.10.exe";
+
+		if (!PATH_TO_XDELTA_EXE.empty())
 		{
 			printf("Enter working directory to store temporary files: ");
-			Gets(WORKING_DIRECTORY, sizeof(WORKING_DIRECTORY));
-			if (WORKING_DIRECTORY[0]==0)
-				GetTempPath(MAX_PATH, WORKING_DIRECTORY);
-			if (WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=='\\' || WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=='/')
-				WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=0;
+			std::getline(std::cin, xdeltaPath);
+			PATH_TO_XDELTA_EXE.assign(xdeltaPath);
+			if (WORKING_DIRECTORY.empty())
+				WORKING_DIRECTORY.assign(std::experimental::filesystem::temp_directory_path());
+
 		}
 
 		printf("Hit 'q' to quit, 'p' to patch, 'f' to full scan. 'c' to cancel the patch. 'r' to reconnect. 'd' to disconnect.\n");

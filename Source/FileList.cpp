@@ -174,7 +174,7 @@ void FileList::AddFile(const char *filename, const char *fullPathToFile, const c
 	// If adding a reference, do not send data
 	RakAssert(isAReference==false || data==0);
 	// Avoid duplicate insertions unless the data is different, in which case overwrite the old data
-	unsigned i;
+	size_t i;
 	for (i=0; i<fileList.Size();i++)
 	{
 		if (strcmp(fileList[i].filename, filename)==0)
@@ -258,7 +258,7 @@ void FileList::AddFilesFromDirectory(const char *applicationDirectory, const cha
 		strcat(dirSoFar, subDirectory);
 		FixEndingSlash(dirSoFar);
 	}
-	for (unsigned int flpcIndex=0; flpcIndex < fileListProgressCallbacks.Size(); flpcIndex++)
+	for (size_t flpcIndex=0; flpcIndex < fileListProgressCallbacks.Size(); flpcIndex++)
 		fileListProgressCallbacks[flpcIndex]->OnAddFilesFromDirectoryStarted(this, dirSoFar);
 	// RAKNET_DEBUG_PRINTF("Adding files from directory %s\n",dirSoFar);
 	dirList.Push(dirSoFar, _FILE_AND_LINE_ );
@@ -275,14 +275,14 @@ void FileList::AddFilesFromDirectory(const char *applicationDirectory, const cha
 		{
 			_findclose(dir);
 			rakFree_Ex(dirSoFar, _FILE_AND_LINE_ );
-			unsigned i;
+			size_t i;
 			for (i=0; i < dirList.Size(); i++)
 				rakFree_Ex(dirList[i], _FILE_AND_LINE_ );
 			return;
 		}
 
 //		RAKNET_DEBUG_PRINTF("Adding %s. %i remaining.\n", fullPath, dirList.Size());
-		for (unsigned int flpcIndex=0; flpcIndex < fileListProgressCallbacks.Size(); flpcIndex++)
+		for (size_t flpcIndex=0; flpcIndex < fileListProgressCallbacks.Size(); flpcIndex++)
 			fileListProgressCallbacks[flpcIndex]->OnDirectory(this, fullPath, dirList.Size());
 
         do
@@ -300,7 +300,7 @@ void FileList::AddFilesFromDirectory(const char *applicationDirectory, const cha
 				strcat(fullPath, fileInfo.name);
 				fileData=0;
 
-				for (unsigned int flpcIndex=0; flpcIndex < fileListProgressCallbacks.Size(); flpcIndex++)
+				for (size_t flpcIndex=0; flpcIndex < fileListProgressCallbacks.Size(); flpcIndex++)
 					fileListProgressCallbacks[flpcIndex]->OnFile(this, dirSoFar, fileInfo.name, fileInfo.size);
 
 				if (writeData && writeHash)
@@ -379,7 +379,7 @@ void FileList::AddFilesFromDirectory(const char *applicationDirectory, const cha
 }
 void FileList::Clear(void)
 {
-	unsigned i;
+	size_t i;
 	for (i=0; i<fileList.Size(); i++)
 	{
 		rakFree_Ex(fileList[i].data, _FILE_AND_LINE_ );
@@ -389,7 +389,7 @@ void FileList::Clear(void)
 void FileList::Serialize(RakNet::BitStream *outBitStream)
 {
 	outBitStream->WriteCompressed(fileList.Size());
-	unsigned i;
+	size_t i;
 	for (i=0; i < fileList.Size(); i++)
 	{
 		outBitStream->WriteCompressed(fileList[i].context.op);
@@ -414,17 +414,18 @@ bool FileList::Deserialize(RakNet::BitStream *inBitStream)
 {
 	bool b, dataLenNonZero=false, fileLenMatchesDataLen=false;
 	char filename[512];
-	uint32_t fileListSize;
+	size_t fileListSize;
 	FileListNode n;
 	b=inBitStream->ReadCompressed(fileListSize);
 #ifdef _DEBUG
 	RakAssert(b);
-	RakAssert(fileListSize < 10000);
+	// Test folders have more than 12'000 files
+	//RakAssert(fileListSize < 10000);
 #endif
-	if (b==false || fileListSize > 10000)
+	if (b==false /*|| fileListSize > 10000*/)
 		return false; // Sanity check
 	Clear();	
-	unsigned i;
+	size_t i;
 	for (i=0; i < fileListSize; i++)
 	{
 		inBitStream->ReadCompressed(n.context.op);
@@ -477,16 +478,16 @@ void FileList::GetDeltaToCurrent(FileList *input, FileList *output, const char *
 {
 	// For all files in this list that do not match the input list, write them to the output list.
 	// dirSubset allows checking only a portion of the files in this list.
-	unsigned thisIndex, inputIndex;
-	unsigned dirSubsetLen, localPathLen, remoteSubdirLen;
+	size_t thisIndex, inputIndex;
+	size_t dirSubsetLen, localPathLen, remoteSubdirLen;
 	bool match;
 	if (dirSubset)
-		dirSubsetLen = (unsigned int) strlen(dirSubset);
+		dirSubsetLen = (size_t) strlen(dirSubset);
 	else
 		dirSubsetLen = 0;
 	if (remoteSubdir && remoteSubdir[0])
 	{
-		remoteSubdirLen=(unsigned int) strlen(remoteSubdir);
+		remoteSubdirLen=(size_t) strlen(remoteSubdir);
 		if (IsSlash(remoteSubdir[remoteSubdirLen-1]))
 			remoteSubdirLen--;
 	}
@@ -495,7 +496,7 @@ void FileList::GetDeltaToCurrent(FileList *input, FileList *output, const char *
 
 	for (thisIndex=0; thisIndex < fileList.Size(); thisIndex++)
 	{
-		localPathLen = (unsigned int) fileList[thisIndex].filename.GetLength();
+		localPathLen = (size_t) fileList[thisIndex].filename.GetLength();
 		while (localPathLen>0)
 		{
 			if (IsSlash(fileList[thisIndex].filename[localPathLen-1]))
@@ -548,7 +549,7 @@ void FileList::ListMissingOrChangedFiles(const char *applicationDirectory, FileL
 //	CSHA1 sha1;
 	FILE *fp;
 	char fullPath[512];
-	unsigned i;
+	size_t i;
 //	char *fileData;
 
 	for (i=0; i < fileList.Size(); i++)
@@ -605,7 +606,7 @@ void FileList::PopulateDataFromDisk(const char *applicationDirectory, bool write
 {
 	FILE *fp;
 	char fullPath[512];
-	unsigned i;
+	size_t i;
 //	CSHA1 sha1;
 
 	i=0;
@@ -691,7 +692,7 @@ void FileList::PopulateDataFromDisk(const char *applicationDirectory, bool write
 }
 void FileList::FlagFilesAsReferences(void)
 {
-	for (unsigned int i=0; i < fileList.Size(); i++)
+	for (size_t i=0; i < fileList.Size(); i++)
 	{
 		fileList[i].isAReference=true;
 		fileList[i].dataLengthBytes=fileList[i].fileLengthBytes;
@@ -700,7 +701,7 @@ void FileList::FlagFilesAsReferences(void)
 void FileList::WriteDataToDisk(const char *applicationDirectory)
 {
 	char fullPath[512];
-	unsigned i,j;
+	size_t i,j;
 
 	for (i=0; i < fileList.Size(); i++)
 	{
@@ -734,7 +735,7 @@ void FileList::DeleteFiles(const char *applicationDirectory)
 
 
 	char fullPath[512];
-	unsigned i,j;
+	size_t i,j;
 
 	for (i=0; i < fileList.Size(); i++)
 	{
@@ -774,13 +775,13 @@ void FileList::AddCallback(FileListProgress *cb)
 	if (cb==0)
 		return;
 
-	if ((unsigned int) fileListProgressCallbacks.GetIndexOf(cb)==(unsigned int)-1)
+	if ((size_t) fileListProgressCallbacks.GetIndexOf(cb)==(size_t)-1)
 		fileListProgressCallbacks.Push(cb, _FILE_AND_LINE_);
 }
 void FileList::RemoveCallback(FileListProgress *cb)
 {
-	unsigned int idx = fileListProgressCallbacks.GetIndexOf(cb);
-	if (idx!=(unsigned int) -1)
+	size_t idx = fileListProgressCallbacks.GetIndexOf(cb);
+	if (idx!=(size_t) -1)
 		fileListProgressCallbacks.RemoveAtIndex(idx);
 }
 void FileList::ClearCallbacks(void)

@@ -25,6 +25,7 @@
 #include "FileOperations.h"
 #include "RakAssert.h"
 #include "ThreadPool.h"
+#include <filesystem>
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -41,7 +42,7 @@ static const unsigned HASH_LENGTH=4;
 
 PatchContext AutopatcherClientCBInterface::ApplyPatchBase(const char *oldFilePath, char **newFileContents, unsigned int *newFileSize, char *patchContents, unsigned int patchSize, uint32_t patchAlgorithm)
 {
-	return ApplyPatchBSDiff(oldFilePath, newFileContents, newFileSize, patchContents, patchSize);
+	return ApplyPatchBSDiff(oldFilePath, newFileContents,  newFileSize, patchContents, patchSize);
 }
 
 PatchContext AutopatcherClientCBInterface::ApplyPatchBSDiff(const char *oldFilePath, char **newFileContents, unsigned int *newFileSize, char *patchContents, unsigned int patchSize)
@@ -442,7 +443,8 @@ bool AutopatcherClient::PatchApplication(const char *_applicationName, const cha
 	if (IsPatching())
 		return false; // Already in the middle of patching.
 
-	strcpy(applicationDirectory, _applicationDirectory);
+	auto applicationDirectoryTemp = std::experimental::filesystem::path(_applicationDirectory).u8string();
+	strcpy(applicationDirectory, applicationDirectoryTemp.c_str());
 	FileList::FixEndingSlash(applicationDirectory);
 	strcpy(applicationName, _applicationName);
 	serverId=host;
