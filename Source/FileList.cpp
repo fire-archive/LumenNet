@@ -419,9 +419,10 @@ bool FileList::Deserialize(RakNet::BitStream *inBitStream)
 	b=inBitStream->ReadCompressed(fileListSize);
 #ifdef _DEBUG
 	RakAssert(b);
-	RakAssert(fileListSize < 10000);
+	// File lists in the sample directory are above 10'000 files
+	// RakAssert(fileListSize < 10000);
 #endif
-	if (b==false || fileListSize > 10000)
+	if (b==false /*|| fileListSize > 10000*/)
 		return false; // Sanity check
 	Clear();	
 	unsigned i;
