@@ -20,17 +20,12 @@
 
 #include "RakAssert.h"
 #include <string.h> // memmove
-#include <climits>
 #include "Export.h"
 #include "RakMemoryOverride.h"
 
-/// Maximum unsigned long long
-#if !defined(_WIN64) && !(__WORDSIZE == 64) 
+/// Maximum unsigned long
 static const unsigned int MAX_UNSIGNED_LONG = 4294967295U;
-MAX_UNSIGNED_LONG_LONG = MAX_UNSIGNED_LONG;
-#else
-static size_t MAX_UNSIGNED_LONG_LONG = ULLONG_MAX;
-#endif
+
 /// The namespace DataStructures was only added to avoid compiler errors for commonly named data structures
 /// As these data structures are stand-alone, you can use them outside of RakNet for your own projects if you wish.
 namespace DataStructures
@@ -106,15 +101,15 @@ namespace DataStructures
 		/// \brief Delete the element at the end of the list.
 		void RemoveFromEnd(const unsigned num=1);
 		
-		/// \brief Returns the index of the specified item or MAX_UNSIGNED_LONG_LONG if not found.
+		/// \brief Returns the index of the specified item or MAX_UNSIGNED_LONG if not found.
 		/// \param[in] input The element to check for 
 		/// \return The index or position of @em input in the list. 
-		/// \retval MAX_UNSIGNED_LONG_LONG The object is not in the list
+		/// \retval MAX_UNSIGNED_LONG The object is not in the list
 		/// \retval [Integer] The index of the element in the list
-		size_t GetIndexOf( const list_type &input ) const;
+		unsigned int GetIndexOf( const list_type &input ) const;
 		
 		/// \return The number of elements in the list
-		size_t Size( void ) const;
+		unsigned int Size( void ) const;
 		
 		/// \brief Clear the list		
 		void Clear( bool doNotDeallocateSmallBlocks, const char *file, unsigned int line );
@@ -132,10 +127,10 @@ namespace DataStructures
 		list_type* listArray;
 		
 		/// Number of elements in the list 		
-		size_t list_size;
+		unsigned int list_size;
 		
 		/// Size of \a array 		
-		size_t allocation_size;
+		unsigned int allocation_size;
 	};
 	template <class list_type>
 		List<list_type>::List()
@@ -437,17 +432,17 @@ namespace DataStructures
 	}
 
 	template <class list_type>
-		size_t List<list_type>::GetIndexOf( const list_type &input ) const
+		unsigned int List<list_type>::GetIndexOf( const list_type &input ) const
 	{
 		for ( unsigned int i = 0; i < list_size; ++i )
 			if ( listArray[ i ] == input )
 				return i;
 
-		return MAX_UNSIGNED_LONG_LONG;
+		return MAX_UNSIGNED_LONG;
 	}
 
 	template <class list_type>
-		inline size_t List<list_type>::Size( void ) const
+		inline unsigned int List<list_type>::Size( void ) const
 	{
 		return list_size;
 	}

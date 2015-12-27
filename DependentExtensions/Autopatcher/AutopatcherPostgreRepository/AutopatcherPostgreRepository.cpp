@@ -15,7 +15,6 @@
 #include "AutopatcherPostgreRepository.h"
 #include "AutopatcherPatchContext.h"
 #include "FileList.h"
-#include <filesystem>
 // libpq-fe.h is part of PostgreSQL which must be installed on this computer to use the PostgreRepository
 #include "libpq-fe.h"
 #include "CreatePatch.h"
@@ -318,7 +317,7 @@ int AutopatcherPostgreRepository::GetPatches(const char *applicationName, FileLi
 	PQclear(result);
 
 	// Go through the input list.
-	size_t inputIndex;
+	unsigned inputIndex;
 	char *userHash, *contentHash;
 	RakNet::RakString userFilename;
 	// char *content;
@@ -1168,7 +1167,7 @@ bool AutopatcherPostgreRepository::UpdateApplicationFiles(const char *applicatio
 	//char *PQgetvalue(result,int row_number,int column_number);
 	//int PQgetlength(result, int row_number, int column_number);
 
-	size_t fileListIndex;
+	unsigned fileListIndex;
 	int rowIndex;
 	RakNet::RakString hardDriveFilename;
 	char *hardDriveHash;
@@ -1303,12 +1302,12 @@ bool AutopatcherPostgreRepository::UpdateApplicationFiles(const char *applicatio
 		hardDriveHash=newFiles.fileList[fileListIndex].data;
 		hardDriveDataLength=newFiles.fileList[fileListIndex].fileLengthBytes;
 
-		std::experimental::filesystem::path path;
-		path = path.assign(applicationDirectory);
-		path /= newFiles.fileList[fileListIndex].fullPathToFile.C_String();
-		path = std::experimental::filesystem::canonical(path);
-		auto pathTemp = path.u8string();
-		FILE *fp = fopen(pathTemp.c_str(), "rb");
+		char path[MAX_PATH];
+		strcpy(path, applicationDirectory);
+		strcat(path, "/");
+		strcat(path, newFiles.fileList[fileListIndex].fullPathToFile);
+
+		FILE *fp = fopen(path, "rb");
 		if (fp==0)
 		{
 			newFiles.Clear();
@@ -1595,7 +1594,7 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 	//char *PQgetvalue(result,int row_number,int column_number);
 	//int PQgetlength(result, int row_number, int column_number);
 
-	size_t fileListIndex;
+	unsigned fileListIndex;
 	int rowIndex;
 	RakNet::RakString hardDriveFilename;
 	char *hardDriveHash;
@@ -1606,7 +1605,7 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 	FileList newFiles;
 	numRows = PQntuples(result);
 
-	// Loop through files on filesOnHarddrive
+	// Loop through files om filesOnHarddrive
 	// If the file in filesOnHarddrive does not exist in the query result, or if it does but the hash is different or non-existent, add this file to the create list
 	for (fileListIndex=0; fileListIndex < filesOnHarddrive.fileList.Size(); fileListIndex++)
 	{
@@ -1729,9 +1728,12 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 		hardDriveHash=newFiles.fileList[fileListIndex].data;
 		hardDriveDataLength=newFiles.fileList[fileListIndex].fileLengthBytes;
 
-		std::experimental::filesystem::path pathToNewContent;
-		pathToNewContent = pathToNewContent.append(applicationDirectory).append(newFiles.fileList[fileListIndex].fullPathToFile.C_String());
-		auto pathToNewContentTemp = std::experimental::filesystem::canonical(pathToNewContent).generic_u8string();
+		char pathToNewContent[MAX_PATH];
+		strcpy(pathToNewContent, applicationDirectory);
+		strcat(pathToNewContent, "/");
+		strcat(pathToNewContent, newFiles.fileList[fileListIndex].fullPathToFile);
+
+
 		sprintf( query, "SELECT fileID from FileVersionHistory WHERE applicationID=%i AND filename=$1::text AND createFile=TRUE;", applicationID );
 		outTemp[0]=hardDriveFilename;
 		outLengths[0]=(int)strlen(hardDriveFilename);
@@ -1805,14 +1807,14 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 			contentColumnIndex = PQfnumber(result, "pathToContent");
 
 			// contentLength=PQgetlength(result, 0, contentColumnIndex);
-			std::experimental::filesystem::path pathToOldContent;
-			pathToOldContent.assign(PQgetvalue(result, 0, contentColumnIndex));
-			const auto pathToOldContentTemp = std::experimental::filesystem::canonical(pathToOldContent).u8string();
-			if (pathToNewContent.compare(pathToOldContent)==0)
+			char *pathToOldContent;
+			pathToOldContent=PQgetvalue(result, 0, contentColumnIndex);
+
+			if (strcmp(pathToNewContent, pathToOldContent)==0)
 			{
 //				rakFree_Ex(newContent, _FILE_AND_LINE_);
 
-				sprintf(lastError,"New file version cannot have the same path as the old file version. Path=%s.\n", pathToNewContentTemp.c_str());
+				sprintf(lastError,"New file version cannot have the same path as the old file version. Path=%s.\n", pathToNewContent);
 				Rollback();
 
 				newFiles.Clear();
@@ -1821,9 +1823,9 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 				return false;
 			}
 
-			printf("%i/%i.%i/%i DIFF from %s to %s ...", fileListIndex+1, newFiles.fileList.Size(), rowIndex+1, numRows, pathToOldContentTemp.c_str(), pathToNewContentTemp.c_str());
+			printf("%i/%i.%i/%i DIFF from %s to %s ...", fileListIndex+1, newFiles.fileList.Size(), rowIndex+1, numRows, pathToOldContent, pathToNewContent);
 			int patchAlgorithm;
-			int makePatchResult=MakePatch(pathToOldContentTemp.c_str(), pathToNewContentTemp.c_str(), &patch, &patchLength, &patchAlgorithm);
+			int makePatchResult=MakePatch(pathToOldContent, pathToNewContent, &patch, &patchLength, &patchAlgorithm);
 			if (makePatchResult < 0 || makePatchResult == 2)
 			{
 				strcpy(lastError,"MakePatch failed.\n");
@@ -1914,10 +1916,10 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 			");", applicationID, hardDriveDataLength, changeSetId, GetEscapedString(userName).C_String());
 
 		outTemp[0]=hardDriveFilename;
-		outTemp[1]=pathToNewContentTemp.c_str();
+		outTemp[1]=pathToNewContent;
 		outTemp[2]=hardDriveHash;
 		outLengths[0]=(int)strlen(hardDriveFilename);
-		outLengths[1]=(int)pathToNewContentTemp.length();
+		outLengths[1]=(int)strlen(pathToNewContent);
 		outLengths[2]=HASH_LENGTH;
 		formats[0]=PQEXECPARAM_FORMAT_TEXT;
 		formats[1]=PQEXECPARAM_FORMAT_TEXT;

@@ -50,11 +50,11 @@ public:
 	struct AutopatcherState
 	{
 		/// How many requests have been queued to be processed later
-		size_t requestsQueued;
+		unsigned int requestsQueued;
 
 		/// How many requests are currently working (including downloading files).
 		/// This will not normally exceed AutopatcherServer::SetMaxConurrentUsers()
-		size_t requestsWorking;
+		unsigned int requestsWorking;
 	};
 
 	/// The server only handles two types of requests - to get a change list since a certain date, or to get a patch
@@ -178,10 +178,10 @@ public:
 	/// If this limit is exceeded, the request packet will be put into a queue and serviced when slots are available
 	/// Defaults to 0 (unlimited)
 	/// \param[in] maxConcurrentUsers Pass 0 for unlimited, otherwise the max users to serve at once
-	void SetMaxConurrentUsers(size_t _maxConcurrentUsers);
+	void SetMaxConurrentUsers(unsigned int _maxConcurrentUsers);
 
 	/// \return Returns what was passed to SetMaxConurrentUsers();
-	size_t GetMaxConurrentUsers(void) const;
+	unsigned int GetMaxConurrentUsers(void) const;
 
 	/// Set a callback to get notifications of when user requests are queued and processed
 	/// This is primarily of use to load balance the server
@@ -253,7 +253,7 @@ protected:
 	void* PerThreadFactory(void *context);
 	void PerThreadDestructor(void* factoryResult, void *context);
 	void RemoveFromThreadPool(SystemAddress systemAddress);
-	virtual size_t GetFilePart( const char *filename, size_t startReadBytes, size_t numBytesToRead, void *preallocatedDestination, FileListNodeContext context);
+	virtual unsigned int GetFilePart( const char *filename, unsigned int startReadBytes, unsigned int numBytesToRead, void *preallocatedDestination, FileListNodeContext context);
 
 	//AutopatcherRepositoryInterface *repository;
 	FileListTransfer *fileListTransfer;
@@ -268,7 +268,7 @@ protected:
 	DataStructures::Queue<AutopatcherRepositoryInterface *> connectionPool;
 
 	// How many users are currently patching
-	// size_t patchingUserCount;
+	// unsigned int patchingUserCount;
 
 	SimpleMutex patchingUsersMutex;
 	DataStructures::List<SystemAddress> patchingUsers;
@@ -278,7 +278,7 @@ protected:
     virtual void OnFilePushesComplete( SystemAddress systemAddress, unsigned short setID );
 	virtual void OnSendAborted( SystemAddress systemAddress );
 
-	size_t maxConcurrentUsers;
+	unsigned int maxConcurrentUsers;
 	// If maxConcurrentUsers is exceeded, then incoming requests are put into this queue
 	DataStructures::Queue<Packet *> userRequestWaitingQueue;
 	void AddToWaitingQueue(Packet *packet);

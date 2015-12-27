@@ -260,7 +260,7 @@ bool TableSerializer::DeserializeFilterQuery(RakNet::BitStream *out, DataStructu
 	{
 		// HACK - cellValue->i is used for integer, character, and binary data. However, for character and binary c will be 0. So use that to determine if the data was integer or not.
 		out->Read(query->cellValue->i);
-		size_t inputLength;
+		unsigned int inputLength;
 		out->ReadAlignedBytesSafeAlloc(&query->cellValue->c,inputLength,10000000); // Sanity check to max binary cell of 10 megabytes
 		if (query->cellValue->c)
 			query->cellValue->i=inputLength;

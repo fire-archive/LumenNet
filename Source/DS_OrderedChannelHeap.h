@@ -82,7 +82,7 @@ namespace DataStructures
 	template <class channel_key_type, class heap_data_type, int (*channel_key_comparison_func)(const channel_key_type&, const channel_key_type&)>
 	void OrderedChannelHeap<channel_key_type, heap_data_type, channel_key_comparison_func>::Push(const channel_key_type &channelID, const heap_data_type &data)
 	{
-		PushAtHead(MAX_UNSIGNED_LONG_LONG, channelID, data);
+		PushAtHead(MAX_UNSIGNED_LONG, channelID, data);
 	}
 
 	template <class channel_key_type, class heap_data_type, int (*channel_key_comparison_func)(const channel_key_type&, const channel_key_type&)>

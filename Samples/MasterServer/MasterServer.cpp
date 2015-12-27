@@ -213,7 +213,7 @@ void MasterServer::HandleQuery(Packet *packet)
 			if (gameServerList.serverList[index]->FindKey(ruleIdentifier))
 			{
 				serverIndex=serversWithKeysList.GetIndexOf(gameServerList.serverList[index]);
-				if (serverIndex==MAX_UNSIGNED_LONG_LONG)
+				if (serverIndex==MAX_UNSIGNED_LONG)
 				{
 					gameServerList.serverList[index]->numberOfKeysFound=1;
 					serversWithKeysList.Insert(gameServerList.serverList[index]);

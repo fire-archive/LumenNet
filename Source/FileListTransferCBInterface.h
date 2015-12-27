@@ -35,7 +35,7 @@ public:
 	struct OnFileStruct
 	{
 		/// \brief The index into the set of files, from 0 to numberOfFilesInThisSet
-		size_t fileIndex;
+		unsigned fileIndex;
 
 		/// \brief The name of the file
 		char fileName[512];
@@ -54,13 +54,13 @@ public:
 		unsigned short setID;
 
 		/// \brief The number of files that are in this set.
-		size_t numberOfFilesInThisSet;
+		unsigned numberOfFilesInThisSet;
 
 		/// \brief The total length of the transmitted files for this set, after being uncompressed
-		size_t byteLengthOfThisSet;
+		unsigned byteLengthOfThisSet;
 
 		/// \brief The total length, in bytes, downloaded for this set.
-		size_t bytesDownloadedForThisSet;
+		unsigned bytesDownloadedForThisSet;
 
 		/// \brief User data passed to one of the functions in the FileList class.
 		/// \details However, on error, this is instead changed to one of the enumerations in the PatchContext structure.
@@ -79,17 +79,17 @@ public:
 		/// \param[out] onFileStruct General information about this file, such as the filename and the first \a partLength bytes. You do NOT need to save this data yourself. The complete file will arrive normally.
 		OnFileStruct *onFileStruct;
 		/// \param[out] partCount The zero based index into partTotal. The percentage complete done of this file is 100 * (partCount+1)/partTotal
-		size_t partCount;
+		unsigned int partCount;
 		/// \param[out] partTotal The total number of parts this file was split into. Each part will be roughly the MTU size, minus the UDP header and RakNet headers
-		size_t partTotal;
+		unsigned int partTotal;
 		/// \param[out] dataChunkLength How many bytes long firstDataChunk and iriDataChunk are
-		size_t dataChunkLength;
+		unsigned int dataChunkLength;
 		/// \param[out] firstDataChunk The first \a partLength of the final file. If you store identifying information about the file in the first \a partLength bytes, you can read them while the download is taking place. If this hasn't arrived yet, firstDataChunk will be 0
 		char *firstDataChunk;
 		/// \param[out] iriDataChunk If the remote system is sending this file using IncrementalReadInterface, then this is the chunk we just downloaded. It will not exist in memory after this callback. You should either store this to disk, or in memory. If it is 0, then the file is smaller than one chunk, and will be held in memory automatically
 		char *iriDataChunk;
 		/// \param[out] iriWriteOffset Offset in bytes from the start of the file for the data pointed to by iriDataChunk
-		size_t iriWriteOffset;
+		unsigned int iriWriteOffset;
 		/// \param[out] Who sent this file
 		SystemAddress senderSystemAddress;
 		/// \param[out] Who sent this file. Not valid when using TCP, only RakPeer (UDP)
@@ -105,10 +105,10 @@ public:
 		unsigned short setID;
 
 		/// \brief The number of files that are in this set.
-		size_t numberOfFilesInThisSet;
+		unsigned numberOfFilesInThisSet;
 
 		/// \brief The total length of the transmitted files for this set, after being uncompressed
-		size_t byteLengthOfThisSet;
+		unsigned byteLengthOfThisSet;
 
 		/// \brief Who sent this file
 		SystemAddress senderSystemAddress;

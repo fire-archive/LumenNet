@@ -24,7 +24,6 @@
 #include "SendToThread.h"
 #endif
 #include <math.h>
-#include "DS_list.h"
 
 using namespace RakNet;
 
@@ -2099,7 +2098,7 @@ void ReliabilityLayer::Update( RakNetSocket2 *s, SystemAddress &systemAddress, i
 					else if (internalPacket->reliability == UNRELIABLE_WITH_ACK_RECEIPT)
 					{
 						unreliableWithAckReceiptHistory.Push(UnreliableWithAckReceiptNode(
-							congestionManager.GetNextDatagramSequenceNumber() + static_cast<unsigned int>(packetsToSendThisUpdateDatagramBoundaries.Size() <  UINT_MAX ? (unsigned long) packetsToSendThisUpdateDatagramBoundaries.Size() : UINT_MAX),
+							congestionManager.GetNextDatagramSequenceNumber() + packetsToSendThisUpdateDatagramBoundaries.Size(),
 							internalPacket->sendReceiptSerial,
 							congestionManager.GetRTOForRetransmission(internalPacket->timesSent+1)+time
 							), _FILE_AND_LINE_);

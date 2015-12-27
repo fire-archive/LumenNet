@@ -50,7 +50,7 @@ void Lobby2Plugin::AddCallbackInterface(Lobby2Callbacks *cb)
 void Lobby2Plugin::RemoveCallbackInterface(Lobby2Callbacks *cb)
 {
 	unsigned long index = callbacks.GetIndexOf(cb);
-	if (index!=MAX_UNSIGNED_LONG_LONG)
+	if (index!=MAX_UNSIGNED_LONG)
 		callbacks.RemoveAtIndex(index);
 }
 void Lobby2Plugin::ClearCallbackInterfaces()

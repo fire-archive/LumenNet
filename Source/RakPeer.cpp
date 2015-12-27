@@ -2780,7 +2780,7 @@ void RakPeer::AttachPlugin( PluginInterface2 *plugin )
 	bool isNotThreadsafe = plugin->UsesReliabilityLayer();
 	if (isNotThreadsafe)
 	{
-		if (pluginListNTS.GetIndexOf(plugin)==MAX_UNSIGNED_LONG_LONG)
+		if (pluginListNTS.GetIndexOf(plugin)==MAX_UNSIGNED_LONG)
 		{
 			plugin->SetRakPeerInterface(this);
 			plugin->OnAttach();
@@ -2789,7 +2789,7 @@ void RakPeer::AttachPlugin( PluginInterface2 *plugin )
 	}
 	else
 	{
-		if (pluginListTS.GetIndexOf(plugin)==MAX_UNSIGNED_LONG_LONG)
+		if (pluginListTS.GetIndexOf(plugin)==MAX_UNSIGNED_LONG)
 		{
 			plugin->SetRakPeerInterface(this);
 			plugin->OnAttach();
@@ -2814,7 +2814,7 @@ void RakPeer::DetachPlugin( PluginInterface2 *plugin )
 	if (isNotThreadsafe)
 	{
 		index = pluginListNTS.GetIndexOf(plugin);
-		if (index!=MAX_UNSIGNED_LONG_LONG)
+		if (index!=MAX_UNSIGNED_LONG)
 		{
 			// Unordered list so delete from end for speed
 			pluginListNTS[index]=pluginListNTS[pluginListNTS.Size()-1];
@@ -2824,7 +2824,7 @@ void RakPeer::DetachPlugin( PluginInterface2 *plugin )
 	else
 	{
 		index = pluginListTS.GetIndexOf(plugin);
-		if (index!=MAX_UNSIGNED_LONG_LONG)
+		if (index!=MAX_UNSIGNED_LONG)
 		{
 			// Unordered list so delete from end for speed
 			pluginListTS[index]=pluginListTS[pluginListTS.Size()-1];

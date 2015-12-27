@@ -12,8 +12,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Kbhit.h"
-#include <iostream>
-#include <filesystem>
 
 #include "GetTime.h"
 #include "RakPeerInterface.h"
@@ -40,8 +38,8 @@
 #define LISTEN_PORT 60000
 #define MAX_INCOMING_CONNECTIONS 128
 
-std::experimental::filesystem::path WORKING_DIRECTORY;
-std::experimental::filesystem::path PATH_TO_XDELTA_EXE;
+char WORKING_DIRECTORY[MAX_PATH];
+char PATH_TO_XDELTA_EXE[MAX_PATH];
 
 // The default AutopatcherPostgreRepository2 uses bsdiff which takes too much memory for large files.
 // I override MakePatch to use XDelta in this case
@@ -56,7 +54,7 @@ class AutopatcherPostgreRepository2_WithXDelta : public RakNet::AutopatcherPostg
 		fseek(fpNew, 0, SEEK_END);
 		int contentLengthNew = ftell(fpNew);
 
-		if ((contentLengthOld < 33554432 && contentLengthNew < 33554432) || PATH_TO_XDELTA_EXE.empty())
+		if ((contentLengthOld < 33554432 && contentLengthNew < 33554432) || PATH_TO_XDELTA_EXE[0]==0)
 		{
 			// Use bsdiff, which does a good job but takes a lot of memory based on the size of the file
 			*patchAlgorithm=0;
@@ -84,12 +82,22 @@ class AutopatcherPostgreRepository2_WithXDelta : public RakNet::AutopatcherPostg
 			char commandLine[512];
 			_snprintf(commandLine, sizeof(commandLine)-1, "-f -s %s %s patchServer_%s.tmp", oldFile, newFile, buff);
 			commandLine[511]=0;
-			auto workingDirectoryTemp = WORKING_DIRECTORY.string();
-			std::string shellExecute = "cd " + workingDirectoryTemp + " && " + PATH_TO_XDELTA_EXE.string() + " " + std::string(commandLine);
-			system(shellExecute.c_str());
 			
+			SHELLEXECUTEINFO shellExecuteInfo;
+			shellExecuteInfo.cbSize = sizeof(SHELLEXECUTEINFO);
+			shellExecuteInfo.fMask = SEE_MASK_NOASYNC | SEE_MASK_NO_CONSOLE;
+			shellExecuteInfo.hwnd = NULL;
+			shellExecuteInfo.lpVerb = "open";
+			shellExecuteInfo.lpFile = PATH_TO_XDELTA_EXE;
+			shellExecuteInfo.lpParameters = commandLine;
+			shellExecuteInfo.lpDirectory = WORKING_DIRECTORY;
+			shellExecuteInfo.nShow = SW_SHOWNORMAL;
+			shellExecuteInfo.hInstApp = NULL;
+			ShellExecuteEx(&shellExecuteInfo);
+			//ShellExecute(NULL, "open", PATH_TO_XDELTA_EXE, commandLine, WORKING_DIRECTORY, SW_SHOWNORMAL);
+
 			char pathToPatch[MAX_PATH];
-			sprintf(pathToPatch, "%s/patchServer_%s.tmp", workingDirectoryTemp.c_str(), buff);
+			sprintf(pathToPatch, "%s/patchServer_%s.tmp", WORKING_DIRECTORY, buff);
 			// r+ instead of r, because I want exclusive access in case xdelta is still working
 			FILE *fpPatch = fopen(pathToPatch, "r+b");
 			RakNet::TimeUS stopWaiting = time + 60000000 * 5;
@@ -193,25 +201,22 @@ int main(int argc, char **argv)
 
 	// https://code.google.com/p/xdelta/downloads/list
 	printf("Optional: Enter path to xdelta.exe: ");
-	std::string xdeltaPath;
-	std::getline(std::cin, xdeltaPath);
-	PATH_TO_XDELTA_EXE = PATH_TO_XDELTA_EXE.assign(xdeltaPath);
-	
-	if (PATH_TO_XDELTA_EXE.empty())
-		PATH_TO_XDELTA_EXE.assign("c:/xdelta3-x86_64-3.0.10.exe");
+	Gets(PATH_TO_XDELTA_EXE, sizeof(PATH_TO_XDELTA_EXE));
+	if (PATH_TO_XDELTA_EXE[0]==0)
+		strcpy(PATH_TO_XDELTA_EXE, "c:/xdelta3-3.0.6-win32.exe");
 
-	if (!PATH_TO_XDELTA_EXE.empty())
+	if (PATH_TO_XDELTA_EXE[0])
 	{
-		std::string workingDirectory;
 		printf("Enter working directory to store temporary files: ");
-		std::getline(std::cin, workingDirectory);
-		WORKING_DIRECTORY = WORKING_DIRECTORY.assign(workingDirectory);
-
-		if (WORKING_DIRECTORY.empty())
-			WORKING_DIRECTORY.assign(std::experimental::filesystem::temp_directory_path());
+		Gets(WORKING_DIRECTORY, sizeof(WORKING_DIRECTORY));
+		if (WORKING_DIRECTORY[0]==0)
+			GetTempPath(MAX_PATH, WORKING_DIRECTORY);
+		if (WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=='\\' || WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=='/')
+			WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=0;
 	}
 
 	printf("(D)rop database\n(C)reate database.\n(A)dd application\n(U)pdate revision.\n(R)emove application\n(Q)uit\n");
+
 	char ch;
 	RakNet::Packet *p;
 	while (1)
@@ -299,17 +304,13 @@ int main(int argc, char **argv)
 				if (appName[0]==0)
 					strcpy(appName, "TestApp");
 
-				std::experimental::filesystem::path appDir;
-				std::string appDirInput;
 				printf("Enter application directory: ");
-				std::getline(std::cin, appDirInput);
-				appDir = appDir.assign(appDirInput);
-				if (appDir.empty())
-					appDir = appDir.assign("D:\\temp");
-
-				auto appDirString = std::experimental::filesystem::canonical(appDir).u8string();
+				char appDir[512];
+				Gets(appDir,sizeof(appDir));
+				if (appDir[0]==0)
+					strcpy(appDir, "D:\\temp");
 				
-				if (connectionObject[0].UpdateApplicationFiles(appName, appDirString.c_str(), username, 0)==false)
+				if (connectionObject[0].UpdateApplicationFiles(appName, appDir, username, 0)==false)
 				{
 					printf("%s", connectionObject[0].GetLastError());
 				}

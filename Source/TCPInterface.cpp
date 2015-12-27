@@ -550,7 +550,7 @@ Packet* TCPInterface::ReceiveInt( void )
 
 void TCPInterface::AttachPlugin( PluginInterface2 *plugin )
 {
-	if (messageHandlerList.GetIndexOf(plugin)==MAX_UNSIGNED_LONG_LONG)
+	if (messageHandlerList.GetIndexOf(plugin)==MAX_UNSIGNED_LONG)
 	{
 		messageHandlerList.Insert(plugin, _FILE_AND_LINE_);
 		plugin->SetTCPInterface(this);
@@ -564,7 +564,7 @@ void TCPInterface::DetachPlugin( PluginInterface2 *plugin )
 
 	unsigned int index;
 	index = messageHandlerList.GetIndexOf(plugin);
-	if (index!=MAX_UNSIGNED_LONG_LONG)
+	if (index!=MAX_UNSIGNED_LONG)
 	{
 		messageHandlerList[index]->OnDetach();
 		// Unordered list so delete from end for speed

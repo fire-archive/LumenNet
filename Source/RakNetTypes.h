@@ -98,7 +98,7 @@ const int UNDEFINED_RPC_INDEX=((RPCIndex)-1);
 /// First byte of a network message
 typedef unsigned char MessageID;
 
-typedef size_t BitSize_t;
+typedef uint32_t BitSize_t;
 
 #if defined(_MSC_VER) && _MSC_VER > 0
 #define PRINTF_64_BIT_MODIFIER "I64"
@@ -436,7 +436,7 @@ struct Packet
 	RakNetGUID guid;
 
 	/// The length of the data in bytes
-	size_t length;
+	unsigned int length;
 
 	/// The length of the data in bits
 	BitSize_t bitSize;
