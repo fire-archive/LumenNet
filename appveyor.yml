@@ -7,6 +7,9 @@ build_script:
     cmake --build . --target AutopatcherServer_PostgreSQL
 
     cmake --build . --target AutopatcherClient
+    
+    cmake --build . --target AutopatcherClientRestarter
 artifacts:
 - path: build/Samples/AutopatcherClient
 - path: build/Samples/AutopatcherServer
+- path: build/Samples/AutopatcherClientRestarter
