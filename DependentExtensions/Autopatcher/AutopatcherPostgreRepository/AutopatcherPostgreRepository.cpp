@@ -15,6 +15,7 @@
 #include "AutopatcherPostgreRepository.h"
 #include "AutopatcherPatchContext.h"
 #include "FileList.h"
+#include <filesystem>
 // libpq-fe.h is part of PostgreSQL which must be installed on this computer to use the PostgreRepository
 #include "libpq-fe.h"
 #include "CreatePatch.h"
@@ -1302,12 +1303,11 @@ bool AutopatcherPostgreRepository::UpdateApplicationFiles(const char *applicatio
 		hardDriveHash=newFiles.fileList[fileListIndex].data;
 		hardDriveDataLength=newFiles.fileList[fileListIndex].fileLengthBytes;
 
-		char path[MAX_PATH];
-		strcpy(path, applicationDirectory);
-		strcat(path, "/");
-		strcat(path, newFiles.fileList[fileListIndex].fullPathToFile);
-
-		FILE *fp = fopen(path, "rb");
+		std::experimental::filesystem::path path;
+		path = path.assign(applicationDirectory);
+		path /= newFiles.fileList[fileListIndex].fullPathToFile.C_String();
+		auto pathU8 = path.u8string();
+		FILE *fp = fopen(pathU8.c_str(), "rb");
 		if (fp==0)
 		{
 			newFiles.Clear();
@@ -1728,12 +1728,10 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 		hardDriveHash=newFiles.fileList[fileListIndex].data;
 		hardDriveDataLength=newFiles.fileList[fileListIndex].fileLengthBytes;
 
-		char pathToNewContent[MAX_PATH];
-		strcpy(pathToNewContent, applicationDirectory);
-		strcat(pathToNewContent, "/");
-		strcat(pathToNewContent, newFiles.fileList[fileListIndex].fullPathToFile);
-
-
+		std::experimental::filesystem::path pathToNewContent;
+		pathToNewContent = pathToNewContent.assign(applicationDirectory);
+		pathToNewContent /= newFiles.fileList[fileListIndex].fullPathToFile.C_String();
+		pathToNewContent = std::experimental::filesystem::canonical(pathToNewContent);
 		sprintf( query, "SELECT fileID from FileVersionHistory WHERE applicationID=%i AND filename=$1::text AND createFile=TRUE;", applicationID );
 		outTemp[0]=hardDriveFilename;
 		outLengths[0]=(int)strlen(hardDriveFilename);
@@ -1807,10 +1805,10 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 			contentColumnIndex = PQfnumber(result, "pathToContent");
 
 			// contentLength=PQgetlength(result, 0, contentColumnIndex);
-			char *pathToOldContent;
-			pathToOldContent=PQgetvalue(result, 0, contentColumnIndex);
-
-			if (strcmp(pathToNewContent, pathToOldContent)==0)
+			std::string temp;
+			temp=PQgetvalue(result, 0, contentColumnIndex);
+			std::experimental::filesystem::path pathToOldContent = std::experimental::filesystem::canonical(std::experimental::filesystem::path(temp));
+			if (pathToNewContent.compare(pathToOldContent) == 0)
 			{
 //				rakFree_Ex(newContent, _FILE_AND_LINE_);
 
@@ -1825,7 +1823,9 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 
 			printf("%i/%i.%i/%i DIFF from %s to %s ...", fileListIndex+1, newFiles.fileList.Size(), rowIndex+1, numRows, pathToOldContent, pathToNewContent);
 			int patchAlgorithm;
-			int makePatchResult=MakePatch(pathToOldContent, pathToNewContent, &patch, &patchLength, &patchAlgorithm);
+			auto pathToNewContentU8 = pathToNewContent.u8string();
+			auto pathToOldContentU8 = pathToOldContent.u8string();
+			int makePatchResult=MakePatch(pathToOldContentU8.c_str(), pathToNewContentU8.c_str(), &patch, &patchLength, &patchAlgorithm);
 			if (makePatchResult < 0 || makePatchResult == 2)
 			{
 				strcpy(lastError,"MakePatch failed.\n");
@@ -1916,10 +1916,11 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 			");", applicationID, hardDriveDataLength, changeSetId, GetEscapedString(userName).C_String());
 
 		outTemp[0]=hardDriveFilename;
-		outTemp[1]=pathToNewContent;
+		auto pathToNewContentU8 = std::experimental::filesystem::canonical(pathToNewContent).generic_u8string();
+		outTemp[1]=pathToNewContentU8.c_str();
 		outTemp[2]=hardDriveHash;
 		outLengths[0]=(int)strlen(hardDriveFilename);
-		outLengths[1]=(int)strlen(pathToNewContent);
+		outLengths[1]=pathToNewContentU8.length();
 		outLengths[2]=HASH_LENGTH;
 		formats[0]=PQEXECPARAM_FORMAT_TEXT;
 		formats[1]=PQEXECPARAM_FORMAT_TEXT;

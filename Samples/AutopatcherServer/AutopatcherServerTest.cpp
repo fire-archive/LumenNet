@@ -22,11 +22,13 @@
 #include "FileList.h" // FLP_Printf
 #include "PacketizedTCP.h"
 #include "Gets.h"
+#include <filesystem>
 
 // Server only includes
 #include "AutopatcherServer.h"
 // Replace this repository with your own implementation if you don't want to use PostgreSQL
 #include "AutopatcherPostgreRepository.h"
+#include <iostream>
 
 #ifdef _WIN32
 #include "WindowsIncludes.h" // Sleep
@@ -38,23 +40,25 @@
 #define LISTEN_PORT 60000
 #define MAX_INCOMING_CONNECTIONS 128
 
-char WORKING_DIRECTORY[MAX_PATH];
-char PATH_TO_XDELTA_EXE[MAX_PATH];
-
 // The default AutopatcherPostgreRepository2 uses bsdiff which takes too much memory for large files.
 // I override MakePatch to use XDelta in this case
 class AutopatcherPostgreRepository2_WithXDelta : public RakNet::AutopatcherPostgreRepository2
 {
-	int MakePatch(const char *oldFile, const char *newFile, char **patch, unsigned int *patchLength, int *patchAlgorithm)
+public:
+	AutopatcherPostgreRepository2_WithXDelta(std::experimental::filesystem::path &workingDirectory, std::experimental::filesystem::path &pathToXdelta) : workingDirectory(workingDirectory), pathToXdelta(pathToXdelta)
 	{
-		FILE *fpOld = fopen(oldFile, "rb");
+	}
+private:
+	int MakePatch(const char* oldFile, const char* newFile, char** patch, unsigned int* patchLength, int* patchAlgorithm)
+	{
+		FILE* fpOld = fopen(oldFile, "rb");
 		fseek(fpOld, 0, SEEK_END);
 		int contentLengthOld = ftell(fpOld);
 		FILE *fpNew = fopen(newFile, "rb");
 		fseek(fpNew, 0, SEEK_END);
 		int contentLengthNew = ftell(fpNew);
 
-		if ((contentLengthOld < 33554432 && contentLengthNew < 33554432) || PATH_TO_XDELTA_EXE[0]==0)
+		if ((contentLengthOld < 33554432 && contentLengthNew < 33554432) || pathToXdelta.empty())
 		{
 			// Use bsdiff, which does a good job but takes a lot of memory based on the size of the file
 			*patchAlgorithm=0;
@@ -69,13 +73,9 @@ class AutopatcherPostgreRepository2_WithXDelta : public RakNet::AutopatcherPostg
 			fclose(fpOld);
 			fclose(fpNew);
 
-			char buff[128];
+			std::string buff;
 			RakNet::TimeUS time = RakNet::GetTimeUS();
-#if defined(_WIN32)
-			sprintf(buff, "%I64u", time);
-#else
-			sprintf(buff, "%llu", (long long unsigned int) time);
-#endif
+			buff = time;
 
 			// Invoke xdelta
 			// See https://code.google.com/p/xdelta/wiki/CommandLineSyntax
@@ -83,28 +83,23 @@ class AutopatcherPostgreRepository2_WithXDelta : public RakNet::AutopatcherPostg
 			_snprintf(commandLine, sizeof(commandLine)-1, "-f -s %s %s patchServer_%s.tmp", oldFile, newFile, buff);
 			commandLine[511]=0;
 			
-			SHELLEXECUTEINFO shellExecuteInfo;
-			shellExecuteInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-			shellExecuteInfo.fMask = SEE_MASK_NOASYNC | SEE_MASK_NO_CONSOLE;
-			shellExecuteInfo.hwnd = NULL;
-			shellExecuteInfo.lpVerb = "open";
-			shellExecuteInfo.lpFile = PATH_TO_XDELTA_EXE;
-			shellExecuteInfo.lpParameters = commandLine;
-			shellExecuteInfo.lpDirectory = WORKING_DIRECTORY;
-			shellExecuteInfo.nShow = SW_SHOWNORMAL;
-			shellExecuteInfo.hInstApp = NULL;
-			ShellExecuteEx(&shellExecuteInfo);
+			std::string shellExecute;
+			shellExecute = "cd " + workingDirectory.string() + " && " + pathToXdelta.string() + commandLine;
+			system(shellExecute.c_str());
 			//ShellExecute(NULL, "open", PATH_TO_XDELTA_EXE, commandLine, WORKING_DIRECTORY, SW_SHOWNORMAL);
 
-			char pathToPatch[MAX_PATH];
-			sprintf(pathToPatch, "%s/patchServer_%s.tmp", WORKING_DIRECTORY, buff);
+			std::experimental::filesystem::path pathToPatch;
+			auto temp = workingDirectory.u8string();
+			pathToPatch = pathToPatch.assign(workingDirectory);
+			pathToPatch = pathToPatch.concat("patchServer_" + buff + ".tmp");
+			auto pathToPatchU8 = pathToXdelta.u8string();
 			// r+ instead of r, because I want exclusive access in case xdelta is still working
-			FILE *fpPatch = fopen(pathToPatch, "r+b");
+			FILE *fpPatch = fopen(pathToPatchU8.c_str(), "r+b");
 			RakNet::TimeUS stopWaiting = time + 60000000 * 5;
 			while (fpPatch==0 && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
-				fpPatch = fopen(pathToPatch, "r+b");
+				fpPatch = fopen(pathToPatchU8.c_str(), "r+b");
 			}
 			if (fpPatch==0)
 				return false;
@@ -115,29 +110,65 @@ class AutopatcherPostgreRepository2_WithXDelta : public RakNet::AutopatcherPostg
 			fread(*patch, 1, *patchLength, fpPatch);
 			fclose(fpPatch);
 
-			int unlinkRes = _unlink(pathToPatch);
+			int unlinkRes = _unlink(pathToPatchU8.c_str());
 			while (unlinkRes!=0 && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
-				unlinkRes = _unlink(pathToPatch);
+				unlinkRes = _unlink(pathToPatchU8.c_str());
 			}
 			if (unlinkRes!=0)
-				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch, errno, strerror(errno));
+				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatchU8.c_str(), errno, strerror(errno));
 
 			return true;
 		}
 	}
+	std::experimental::filesystem::path workingDirectory;
+	std::experimental::filesystem::path pathToXdelta;
 };
 
 int main(int argc, char **argv)
 {
 	printf("Server starting... ");
+	std::experimental::filesystem::path workingDirectory;
+	std::experimental::filesystem::path pathToXdelta;
 	RakNet::AutopatcherServer autopatcherServer;
 	// RakNet::FLP_Printf progressIndicator;
 	RakNet::FileListTransfer fileListTransfer;
 	static const int workerThreadCount=4; // Used for checking patches only
 	static const int sqlConnectionObjectCount=32; // Used for both checking patches and downloading
-	AutopatcherPostgreRepository2_WithXDelta connectionObject[sqlConnectionObjectCount];
+	AutopatcherPostgreRepository2_WithXDelta connectionObject[sqlConnectionObjectCount]{
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta},
+		{workingDirectory, pathToXdelta}};
 	RakNet::AutopatcherRepositoryInterface *connectionObjectAddresses[sqlConnectionObjectCount];
 	for (int i=0; i < sqlConnectionObjectCount; i++)
 		connectionObjectAddresses[i]=&connectionObject[i];
@@ -201,18 +232,20 @@ int main(int argc, char **argv)
 
 	// https://code.google.com/p/xdelta/downloads/list
 	printf("Optional: Enter path to xdelta.exe: ");
-	Gets(PATH_TO_XDELTA_EXE, sizeof(PATH_TO_XDELTA_EXE));
-	if (PATH_TO_XDELTA_EXE[0]==0)
-		strcpy(PATH_TO_XDELTA_EXE, "c:/xdelta3-3.0.6-win32.exe");
+	std::string input;
+	std::getline(std::cin, input);
+	pathToXdelta.assign(input);
+	if (pathToXdelta.empty())
+		pathToXdelta /= "c:/xdelta3-x86_64-3.0.10.exe";
 
-	if (PATH_TO_XDELTA_EXE[0])
+	if (!pathToXdelta.empty())
 	{
 		printf("Enter working directory to store temporary files: ");
-		Gets(WORKING_DIRECTORY, sizeof(WORKING_DIRECTORY));
-		if (WORKING_DIRECTORY[0]==0)
-			GetTempPath(MAX_PATH, WORKING_DIRECTORY);
-		if (WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=='\\' || WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=='/')
-			WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=0;
+		std::string input;
+		std::getline(std::cin, input);
+		workingDirectory.assign(input);
+		if (!workingDirectory.empty())
+			workingDirectory = workingDirectory.assign(std::experimental::filesystem::temp_directory_path());
 	}
 
 	printf("(D)rop database\n(C)reate database.\n(A)dd application\n(U)pdate revision.\n(R)emove application\n(Q)uit\n");
