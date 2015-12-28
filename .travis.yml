@@ -1,4 +1,12 @@
 # RakNet Travis
+env: GCC_VERSION=5 BUILD_TYPE=Debug CPP=1z
+      os: linux
+      addons: &gcc5
+        apt:
+          packages:
+            - g++-5
+          sources:
+            - ubuntu-toolchain-r-test
 language: cpp
 install:
   - sudo apt-get update -qq
