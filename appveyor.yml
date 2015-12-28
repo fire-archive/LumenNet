@@ -1,0 +1,12 @@
+version: 1.0.{build}
+os: Visual Studio 2015
+install:
+- cmd: "mkdir build \ncd build\ncmake -G \"Visual Studio 14 2015 Win64\" .."
+build_script:
+- cmd: >-
+    cmake --build . --target AutopatcherServer_PostgreSQL
+
+    cmake --build . --target AutopatcherClient
+artifacts:
+- path: build/Samples/AutopatcherClient
+- path: build/Samples/AutopatcherServer
