@@ -1,13 +1,12 @@
 # RakNet Travis
-env: GCC_VERSION=5 BUILD_TYPE=Debug CPP=1z
-      os: linux
-      addons: &gcc5
-        apt:
-          packages:
-            - g++-5
-          sources:
-            - ubuntu-toolchain-r-test
 language: cpp
+
+matrix:
+  include:
+  # Test gcc-5.0: C++1z
+    - env: GCC_VERSION=5 CPP=1z LIBCXX=Off
+    -  os: linux
+
 install:
   - sudo apt-get update -qq
   - sudo apt-get install -y -qq build-essential
