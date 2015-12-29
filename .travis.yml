@@ -27,8 +27,8 @@ before_install:
     - sudo apt-get update
 
 install:
-    - sudo apt-get install cmake cmake-data --yes
-    - sudo apt-get upgrade --yes
+    - sudo apt-get install cmake cmake-data --force-confdef
+    - sudo apt-get upgrade --force-confdef
 
 script:
   - export CHECKOUT_PATH=`pwd`;
