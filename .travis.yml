@@ -8,7 +8,7 @@ matrix:
 
 os: linux
 
-addons:  &gcc5
+addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
@@ -16,6 +16,7 @@ addons:  &gcc5
       - llvm-toolchain-precise-3.6
     packages:
       - cmake
+      - cmake-data
       - gcc-5
       - build-essential
       - g++-5
