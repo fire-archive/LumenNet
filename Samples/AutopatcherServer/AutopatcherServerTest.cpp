@@ -22,7 +22,11 @@
 #include "FileList.h" // FLP_Printf
 #include "PacketizedTCP.h"
 #include "Gets.h"
+#ifdef _WIN32
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 
 // Server only includes
 #include "AutopatcherServer.h"
@@ -45,23 +49,25 @@
 class AutopatcherPostgreRepository2_WithXDelta : public RakNet::AutopatcherPostgreRepository2
 {
 public:
-	AutopatcherPostgreRepository2_WithXDelta(std::experimental::filesystem::path &workingDirectory, std::experimental::filesystem::path &pathToXdelta) : workingDirectory(workingDirectory), pathToXdelta(pathToXdelta)
+	AutopatcherPostgreRepository2_WithXDelta(std::experimental::filesystem::path& workingDirectory, std::experimental::filesystem::path& pathToXdelta)
+		: workingDirectory(workingDirectory), pathToXdelta(pathToXdelta)
 	{
 	}
+
 private:
 	int MakePatch(const char* oldFile, const char* newFile, char** patch, unsigned int* patchLength, int* patchAlgorithm)
 	{
 		FILE* fpOld = fopen(oldFile, "rb");
 		fseek(fpOld, 0, SEEK_END);
 		int contentLengthOld = ftell(fpOld);
-		FILE *fpNew = fopen(newFile, "rb");
+		FILE* fpNew = fopen(newFile, "rb");
 		fseek(fpNew, 0, SEEK_END);
 		int contentLengthNew = ftell(fpNew);
 
 		if ((contentLengthOld < 33554432 && contentLengthNew < 33554432) || pathToXdelta.empty())
 		{
 			// Use bsdiff, which does a good job but takes a lot of memory based on the size of the file
-			*patchAlgorithm=0;
+			*patchAlgorithm = 0;
 			bool b = MakePatchBSDiff(fpOld, contentLengthOld, fpNew, contentLengthNew, patch, patchLength);
 			fclose(fpOld);
 			fclose(fpNew);
@@ -69,7 +75,7 @@ private:
 		}
 		else
 		{
-			*patchAlgorithm=1;
+			*patchAlgorithm = 1;
 			fclose(fpOld);
 			fclose(fpNew);
 
@@ -79,44 +85,42 @@ private:
 
 			// Invoke xdelta
 			// See https://code.google.com/p/xdelta/wiki/CommandLineSyntax
-			char commandLine[512];
-			_snprintf(commandLine, sizeof(commandLine)-1, "-f -s %s %s patchServer_%s.tmp", oldFile, newFile, buff);
-			commandLine[511]=0;
-			
+			std::string commandLine;
+			commandLine = "-f -s " + std::string(oldFile) + " " + std::string(newFile) + " patchServer_" + std::string(buff) + ".tmp";
+
 			std::string shellExecute;
 			shellExecute = "cd " + workingDirectory.string() + " && " + pathToXdelta.string() + commandLine;
 			system(shellExecute.c_str());
 			//ShellExecute(NULL, "open", PATH_TO_XDELTA_EXE, commandLine, WORKING_DIRECTORY, SW_SHOWNORMAL);
 
 			std::experimental::filesystem::path pathToPatch;
-			auto temp = workingDirectory.u8string();
-			pathToPatch = pathToPatch.assign(workingDirectory);
+			pathToPatch = workingDirectory;
 			pathToPatch = pathToPatch.concat("patchServer_" + buff + ".tmp");
 			auto pathToPatchU8 = pathToXdelta.u8string();
 			// r+ instead of r, because I want exclusive access in case xdelta is still working
-			FILE *fpPatch = fopen(pathToPatchU8.c_str(), "r+b");
+			FILE* fpPatch = fopen(pathToPatchU8.c_str(), "r+b");
 			RakNet::TimeUS stopWaiting = time + 60000000 * 5;
-			while (fpPatch==0 && RakNet::GetTimeUS() < stopWaiting)
+			while (fpPatch == 0 && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
 				fpPatch = fopen(pathToPatchU8.c_str(), "r+b");
 			}
-			if (fpPatch==0)
+			if (fpPatch == 0)
 				return false;
 			fseek(fpPatch, 0, SEEK_END);
 			*patchLength = ftell(fpPatch);
 			fseek(fpPatch, 0, SEEK_SET);
-			*patch = (char*) rakMalloc_Ex(*patchLength, _FILE_AND_LINE_);
+			*patch = (char*)rakMalloc_Ex(*patchLength, _FILE_AND_LINE_);
 			fread(*patch, 1, *patchLength, fpPatch);
 			fclose(fpPatch);
 
-			int unlinkRes = _unlink(pathToPatchU8.c_str());
-			while (unlinkRes!=0 && RakNet::GetTimeUS() < stopWaiting)
+			int unlinkRes = std::experimental::filesystem::remove(pathToPatch);
+			while (unlinkRes != 0 && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
-				unlinkRes = _unlink(pathToPatchU8.c_str());
+				unlinkRes = std::experimental::filesystem::remove(pathToPatch);
 			}
-			if (unlinkRes!=0)
+			if (unlinkRes != 0)
 				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatchU8.c_str(), errno, strerror(errno));
 
 			return true;
@@ -126,7 +130,7 @@ private:
 	std::experimental::filesystem::path pathToXdelta;
 };
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 	printf("Server starting... ");
 	std::experimental::filesystem::path workingDirectory;
@@ -134,8 +138,8 @@ int main(int argc, char **argv)
 	RakNet::AutopatcherServer autopatcherServer;
 	// RakNet::FLP_Printf progressIndicator;
 	RakNet::FileListTransfer fileListTransfer;
-	static const int workerThreadCount=4; // Used for checking patches only
-	static const int sqlConnectionObjectCount=32; // Used for both checking patches and downloading
+	static const int workerThreadCount = 4;			// Used for checking patches only
+	static const int sqlConnectionObjectCount = 32; // Used for both checking patches and downloading
 	AutopatcherPostgreRepository2_WithXDelta connectionObject[sqlConnectionObjectCount]{
 		{workingDirectory, pathToXdelta},
 		{workingDirectory, pathToXdelta},
@@ -169,10 +173,10 @@ int main(int argc, char **argv)
 		{workingDirectory, pathToXdelta},
 		{workingDirectory, pathToXdelta},
 		{workingDirectory, pathToXdelta}};
-	RakNet::AutopatcherRepositoryInterface *connectionObjectAddresses[sqlConnectionObjectCount];
-	for (int i=0; i < sqlConnectionObjectCount; i++)
-		connectionObjectAddresses[i]=&connectionObject[i];
-//	fileListTransfer.AddCallback(&progressIndicator);
+	RakNet::AutopatcherRepositoryInterface* connectionObjectAddresses[sqlConnectionObjectCount];
+	for (int i = 0; i < sqlConnectionObjectCount; i++)
+		connectionObjectAddresses[i] = &connectionObject[i];
+	//	fileListTransfer.AddCallback(&progressIndicator);
 	autopatcherServer.SetFileListTransferPlugin(&fileListTransfer);
 	// PostgreSQL is fast, so this may not be necessary, or could use fewer threads
 	// This is used to read increments of large files concurrently, thereby serving users downloads as other users read from the DB
@@ -182,7 +186,7 @@ int main(int argc, char **argv)
 	autopatcherServer.SetLoadManagementCallback(&loadNotifier);
 #ifdef USE_TCP
 	RakNet::PacketizedTCP packetizedTCP;
-	if (packetizedTCP.Start(LISTEN_PORT,MAX_INCOMING_CONNECTIONS)==false)
+	if (packetizedTCP.Start(LISTEN_PORT, MAX_INCOMING_CONNECTIONS) == false)
 	{
 		printf("Failed to start TCP. Is the port already in use?");
 		return 1;
@@ -190,10 +194,10 @@ int main(int argc, char **argv)
 	packetizedTCP.AttachPlugin(&autopatcherServer);
 	packetizedTCP.AttachPlugin(&fileListTransfer);
 #else
-	RakNet::RakPeerInterface *rakPeer;
+	RakNet::RakPeerInterface* rakPeer;
 	rakPeer = RakNet::RakPeerInterface::GetInstance();
-	RakNet::SocketDescriptor socketDescriptor(LISTEN_PORT,0);
-	rakPeer->Startup(MAX_INCOMING_CONNECTIONS,&socketDescriptor, 1);
+	RakNet::SocketDescriptor socketDescriptor(LISTEN_PORT, 0);
+	rakPeer->Startup(MAX_INCOMING_CONNECTIONS, &socketDescriptor, 1);
 	rakPeer->SetMaximumIncomingConnections(MAX_INCOMING_CONNECTIONS);
 	rakPeer->AttachPlugin(&autopatcherServer);
 	rakPeer->AttachPlugin(&fileListTransfer);
@@ -203,18 +207,19 @@ int main(int argc, char **argv)
 	printf("Enter database password:\n");
 	const int kMaxPasswordSize = 128;
 	const int kMaxConnectionStringSize = 256;
-	char connectionString[kMaxConnectionStringSize],password[kMaxPasswordSize];
+	char connectionString[kMaxConnectionStringSize], password[kMaxPasswordSize];
 	char username[kMaxConnectionStringSize];
 	strcpy(username, "postgres");
 	fgets(password, kMaxPasswordSize, stdin);
-	if (password[0]==0) strcpy(password, "aaaa");
+	if (password[0] == 0)
+		strcpy(password, "aaaa");
 	strcpy(connectionString, "user=");
 	strcat(connectionString, username);
 	strcat(connectionString, " password=");
 	strcat(connectionString, password);
-	for (int conIdx=0; conIdx < sqlConnectionObjectCount; conIdx++)
+	for (int conIdx = 0; conIdx < sqlConnectionObjectCount; conIdx++)
 	{
-		if (connectionObject[conIdx].Connect(connectionString)==false)
+		if (connectionObject[conIdx].Connect(connectionString) == false)
 		{
 			printf("Database connection failed.\n");
 			return 1;
@@ -225,7 +230,7 @@ int main(int argc, char **argv)
 	printf("Starting threads\n");
 	// 4 Worker threads, which is CPU intensive
 	// A greater number of SQL connections, which read files incrementally for large downloads
-	autopatcherServer.StartThreads(workerThreadCount,sqlConnectionObjectCount, connectionObjectAddresses);
+	autopatcherServer.StartThreads(workerThreadCount, sqlConnectionObjectCount, connectionObjectAddresses);
 	autopatcherServer.CacheMostRecentPatch(0);
 	// autopatcherServer.SetAllowDownloadOfOriginalUnmodifiedFiles(false);
 	printf("System ready for connections\n");
@@ -234,7 +239,7 @@ int main(int argc, char **argv)
 	printf("Optional: Enter path to xdelta.exe: ");
 	std::string input;
 	std::getline(std::cin, input);
-	pathToXdelta.assign(input);
+	pathToXdelta /= input;
 	if (pathToXdelta.empty())
 		pathToXdelta /= "c:/xdelta3-x86_64-3.0.10.exe";
 
@@ -243,107 +248,109 @@ int main(int argc, char **argv)
 		printf("Enter working directory to store temporary files: ");
 		std::string input;
 		std::getline(std::cin, input);
-		workingDirectory.assign(input);
+		std::experimental::filesystem::path temp;
+		temp /= input;
+		workingDirectory = temp;
 		if (!workingDirectory.empty())
-			workingDirectory = workingDirectory.assign(std::experimental::filesystem::temp_directory_path());
+			workingDirectory = std::experimental::filesystem::temp_directory_path();
 	}
 
 	printf("(D)rop database\n(C)reate database.\n(A)dd application\n(U)pdate revision.\n(R)emove application\n(Q)uit\n");
 
 	char ch;
-	RakNet::Packet *p;
+	RakNet::Packet* p;
 	while (1)
 	{
 #ifdef USE_TCP
 		RakNet::SystemAddress notificationAddress;
-		notificationAddress=packetizedTCP.HasCompletedConnectionAttempt();
-		if (notificationAddress!=RakNet::UNASSIGNED_SYSTEM_ADDRESS)
+		notificationAddress = packetizedTCP.HasCompletedConnectionAttempt();
+		if (notificationAddress != RakNet::UNASSIGNED_SYSTEM_ADDRESS)
 			printf("ID_CONNECTION_REQUEST_ACCEPTED\n");
-		notificationAddress=packetizedTCP.HasNewIncomingConnection();
-		if (notificationAddress!=RakNet::UNASSIGNED_SYSTEM_ADDRESS)
+		notificationAddress = packetizedTCP.HasNewIncomingConnection();
+		if (notificationAddress != RakNet::UNASSIGNED_SYSTEM_ADDRESS)
 			printf("ID_NEW_INCOMING_CONNECTION\n");
-		notificationAddress=packetizedTCP.HasLostConnection();
-		if (notificationAddress!=RakNet::UNASSIGNED_SYSTEM_ADDRESS)
+		notificationAddress = packetizedTCP.HasLostConnection();
+		if (notificationAddress != RakNet::UNASSIGNED_SYSTEM_ADDRESS)
 			printf("ID_CONNECTION_LOST\n");
 
-		p=packetizedTCP.Receive();
+		p = packetizedTCP.Receive();
 		while (p)
 		{
 			packetizedTCP.DeallocatePacket(p);
-			p=packetizedTCP.Receive();
+			p = packetizedTCP.Receive();
 		}
 #else
-		p=rakPeer->Receive();
+		p = rakPeer->Receive();
 		while (p)
 		{
-			if (p->data[0]==ID_NEW_INCOMING_CONNECTION)
+			if (p->data[0] == ID_NEW_INCOMING_CONNECTION)
 				printf("ID_NEW_INCOMING_CONNECTION\n");
-			else if (p->data[0]==ID_DISCONNECTION_NOTIFICATION)
+			else if (p->data[0] == ID_DISCONNECTION_NOTIFICATION)
 				printf("ID_DISCONNECTION_NOTIFICATION\n");
-			else if (p->data[0]==ID_CONNECTION_LOST)
+			else if (p->data[0] == ID_CONNECTION_LOST)
 				printf("ID_CONNECTION_LOST\n");
 
 			rakPeer->DeallocatePacket(p);
-			p=rakPeer->Receive();
+			p = rakPeer->Receive();
 		}
 #endif
 
 		if (kbhit())
 		{
-			ch=getch();
-			if (ch=='q')
+			ch = getch();
+			if (ch == 'q')
 				break;
-			else if (ch=='c')
+			else if (ch == 'c')
 			{
-				if (connectionObject[0].CreateAutopatcherTables()==false)
+				if (connectionObject[0].CreateAutopatcherTables() == false)
 					printf("%s", connectionObject[0].GetLastError());
 			}
-			else if (ch=='d')
+			else if (ch == 'd')
 			{
-                if (connectionObject[0].DestroyAutopatcherTables()==false)
+				if (connectionObject[0].DestroyAutopatcherTables() == false)
 					printf("%s", connectionObject[0].GetLastError());
 			}
-			else if (ch=='a')
+			else if (ch == 'a')
 			{
 				printf("Enter application name to add: ");
 				char appName[512];
-				Gets(appName,sizeof(appName));
-				if (appName[0]==0)
+				Gets(appName, sizeof(appName));
+				if (appName[0] == 0)
 					strcpy(appName, "TestApp");
 
-				if (connectionObject[0].AddApplication(appName, username)==false)
+				if (connectionObject[0].AddApplication(appName, username) == false)
 					printf("%s", connectionObject[0].GetLastError());
 				else
 					printf("Done\n");
 			}
-			else if (ch=='r')
+			else if (ch == 'r')
 			{
 				printf("Enter application name to remove: ");
 				char appName[512];
-				Gets(appName,sizeof(appName));
-				if (appName[0]==0)
+				Gets(appName, sizeof(appName));
+				if (appName[0] == 0)
 					strcpy(appName, "TestApp");
 
-				if (connectionObject[0].RemoveApplication(appName)==false)
+				if (connectionObject[0].RemoveApplication(appName) == false)
 					printf("%s", connectionObject[0].GetLastError());
 				else
 					printf("Done\n");
 			}
-			else if (ch=='u')
+			else if (ch == 'u')
 			{
 				printf("Enter application name: ");
 				char appName[512];
-				Gets(appName,sizeof(appName));
-				if (appName[0]==0)
+				Gets(appName, sizeof(appName));
+				if (appName[0] == 0)
 					strcpy(appName, "TestApp");
 
 				printf("Enter application directory: ");
 				char appDir[512];
-				Gets(appDir,sizeof(appDir));
-				if (appDir[0]==0)
+				Gets(appDir, sizeof(appDir));
+				if (appDir[0] == 0)
 					strcpy(appDir, "D:\\temp");
-				
-				if (connectionObject[0].UpdateApplicationFiles(appName, appDir, username, 0)==false)
+
+				if (connectionObject[0].UpdateApplicationFiles(appName, appDir, username, 0) == false)
 				{
 					printf("%s", connectionObject[0].GetLastError());
 				}
@@ -358,13 +365,11 @@ int main(int argc, char **argv)
 		RakSleep(30);
 	}
 
-
 #ifdef USE_TCP
 	packetizedTCP.Stop();
 #else
 	RakNet::RakPeerInterface::DestroyInstance(rakPeer);
 #endif
 
-
-return 0;
+	return 0;
 }

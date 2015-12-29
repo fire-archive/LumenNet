@@ -15,7 +15,11 @@
 #include "AutopatcherPostgreRepository.h"
 #include "AutopatcherPatchContext.h"
 #include "FileList.h"
+#ifdef _WIN32
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 // libpq-fe.h is part of PostgreSQL which must be installed on this computer to use the PostgreRepository
 #include "libpq-fe.h"
 #include "CreatePatch.h"
