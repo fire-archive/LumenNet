@@ -12,6 +12,7 @@ addons:
       - cmake
       - cmake-data
       - gcc-5
+      - ninja-build
       - build-essential
       - g++-5
       - clang-3.6
