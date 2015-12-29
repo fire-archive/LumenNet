@@ -22,7 +22,7 @@ before_install:
     - sudo apt-get update
 
 install:
-    - sudo apt-get install cmake cmake-data
+    - sudo apt-get install cmake ninja-build cmake-data
     - sudo apt-get upgrade -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 script:
