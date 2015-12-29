@@ -8,7 +8,7 @@ compiler:
 matrix:
   include:
   # Test gcc-5.0: C++1z
-    - env: GCC_VERSION=5 CPP=1z LIBCXX=Off
+    - env: GCC_VERSION=5 CPP=11 LIBCXX=Off
 
 os: linux
 
