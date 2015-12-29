@@ -11,6 +11,12 @@
 // Common includes
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
+#ifdef _WIN32
+#include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 #include "Kbhit.h"
 
 #include "GetTime.h"
@@ -28,8 +34,8 @@
 #include "Gets.h"
 #include "RakSleep.h"
 
-char WORKING_DIRECTORY[MAX_PATH];
-char PATH_TO_XDELTA_EXE[MAX_PATH];
+std::experimental::filesystem::path WORKING_DIRECTORY;
+std::experimental::filesystem::path PATH_TO_XDELTA_EXE;
 
 class TestCB : public RakNet::AutopatcherClientCBInterface
 {
@@ -86,17 +92,16 @@ public:
 		}
 		else
 		{
-			char buff[128];
+			std::string buff;
 			RakNet::TimeUS time = RakNet::GetTimeUS();
-#if defined(_WIN32)
-			sprintf(buff, "%I64u", time);
-#else
-			sprintf(buff, "%llu", (long long unsigned int) time);
-#endif
-
-			char pathToPatch1[MAX_PATH], pathToPatch2[MAX_PATH];
-			sprintf(pathToPatch1, "%s/patchClient_%s.tmp", WORKING_DIRECTORY, buff);
-			FILE *fpPatch = fopen(pathToPatch1, "wb");
+			buff = time;
+			std::experimental::filesystem::path pathToPatch1, pathToPatch2;
+			std::experimental::filesystem::path commandLine;
+			commandLine = WORKING_DIRECTORY;
+			commandLine /= commandLine.concat("patchClient_" + buff + ".tmp");
+			auto pathToPatch1U8 = pathToPatch1.u8string();
+			auto pathToPatch2U8 = pathToPatch2.u8string();
+			FILE *fpPatch = fopen(pathToPatch1U8.c_str(), "wb");
 			if (fpPatch==0)
 				return PC_ERROR_PATCH_TARGET_MISSING;
 			fwrite(patchContents, 1, patchSize, fpPatch);
@@ -104,31 +109,23 @@ public:
 
 			// Invoke xdelta
 			// See https://code.google.com/p/xdelta/wiki/CommandLineSyntax
-			char commandLine[512];
-			_snprintf(commandLine, sizeof(commandLine)-1, "-d -f -s %s patchClient_%s.tmp newFile_%s.tmp", oldFilePath, buff, buff);
-			commandLine[511]=0;
+			std::string xdeltaCommandLine;
+			xdeltaCommandLine = "-d -f -s " + std::string(oldFilePath) + " patchClient_" + std::string(buff) + ".tmp  newFile_" + std::string(buff) + ".tmp";
 
-			SHELLEXECUTEINFO shellExecuteInfo;
-			shellExecuteInfo.cbSize = sizeof(SHELLEXECUTEINFO);
-			shellExecuteInfo.fMask = SEE_MASK_NOASYNC | SEE_MASK_NO_CONSOLE;
-			shellExecuteInfo.hwnd = NULL;
-			shellExecuteInfo.lpVerb = "open";
-			shellExecuteInfo.lpFile = PATH_TO_XDELTA_EXE;
-			shellExecuteInfo.lpParameters = commandLine;
-			shellExecuteInfo.lpDirectory = WORKING_DIRECTORY;
-			shellExecuteInfo.nShow = SW_SHOWNORMAL;
-			shellExecuteInfo.hInstApp = NULL;
-			ShellExecuteEx(&shellExecuteInfo);
+			std::string shellExecute;
+			shellExecute = "cd " + WORKING_DIRECTORY.string() + " && " + PATH_TO_XDELTA_EXE.string() + commandLine.string();
+			system(shellExecute.c_str());
 
 			// ShellExecute(NULL, "open", PATH_TO_XDELTA_EXE, commandLine, WORKING_DIRECTORY, SW_SHOWNORMAL);
 
-			sprintf(pathToPatch2, "%s/newFile_%s.tmp", WORKING_DIRECTORY, buff);
-			fpPatch = fopen(pathToPatch2, "r+b");
+			pathToPatch2 = WORKING_DIRECTORY;
+			pathToPatch2 /= pathToPatch2.concat("newFile_" + buff + ".tmp");
+			fpPatch = fopen(pathToPatch2U8.c_str(), "r+b");
 			RakNet::TimeUS stopWaiting = time + 60000000;
 			while (fpPatch==0 && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
-				fpPatch = fopen(pathToPatch2, "r+b");
+				fpPatch = fopen(pathToPatch2U8.c_str(), "r+b");
 			}
 			if (fpPatch==0)
 			{
@@ -143,21 +140,21 @@ public:
 			fread(*newFileContents, 1, *newFileSize, fpPatch);
 			fclose(fpPatch);
 
-			int unlinkRes1 = _unlink(pathToPatch1);
-			int unlinkRes2 = _unlink(pathToPatch2);
+			int unlinkRes1 = std::experimental::filesystem::remove(pathToPatch1);
+			int unlinkRes2 = std::experimental::filesystem::remove(pathToPatch2);
 			while ((unlinkRes1!=0 || unlinkRes2!=0) && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
 				if (unlinkRes1!=0)
-					unlinkRes1 = _unlink(pathToPatch1);
+					unlinkRes1 = std::experimental::filesystem::remove(pathToPatch1);
 				if (unlinkRes2!=0)
-					unlinkRes2 = _unlink(pathToPatch2);
+					unlinkRes2 = std::experimental::filesystem::remove(pathToPatch2);
 			}
 
 			if (unlinkRes1!=0)
-				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch1, errno, strerror(errno));
+				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch1U8.c_str(), errno, strerror(errno));
 			if (unlinkRes2!=0)
-				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch2, errno, strerror(errno));
+				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch2U8.c_str(), errno, strerror(errno));
 
 			return PC_WRITE_FILE;
 		}
@@ -250,19 +247,22 @@ int main(int argc, char **argv)
 	if (patchImmediately==false)
 	{
 		printf("Optional: Enter path to xdelta exe: ");
-		Gets(PATH_TO_XDELTA_EXE, sizeof(PATH_TO_XDELTA_EXE));
+		std::experimental::filesystem::path input;
+		std::string temp;
+		std::getline(std::cin, temp);
+		input /= temp;
+		PATH_TO_XDELTA_EXE = input;
 		// https://code.google.com/p/xdelta/downloads/list
-		if (PATH_TO_XDELTA_EXE[0]==0)
-			strcpy(PATH_TO_XDELTA_EXE, "c:/xdelta3-3.0.6-win32.exe");
+		if (PATH_TO_XDELTA_EXE.empty())
+			PATH_TO_XDELTA_EXE = std::experimental::filesystem::path("c:/xdelta3-3.0.6-win32.exe");
 
-		if (PATH_TO_XDELTA_EXE[0])
+		if (!PATH_TO_XDELTA_EXE.empty())
 		{
 			printf("Enter working directory to store temporary files: ");
-			Gets(WORKING_DIRECTORY, sizeof(WORKING_DIRECTORY));
-			if (WORKING_DIRECTORY[0]==0)
-				GetTempPath(MAX_PATH, WORKING_DIRECTORY);
-			if (WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=='\\' || WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=='/')
-				WORKING_DIRECTORY[strlen(WORKING_DIRECTORY)-1]=0;
+			std::getline(std::cin, temp);
+			WORKING_DIRECTORY = std::experimental::filesystem::path(temp);
+			if (WORKING_DIRECTORY.empty())
+				WORKING_DIRECTORY = std::experimental::filesystem::temp_directory_path();
 		}
 
 		printf("Hit 'q' to quit, 'p' to patch, 'f' to full scan. 'c' to cancel the patch. 'r' to reconnect. 'd' to disconnect.\n");
