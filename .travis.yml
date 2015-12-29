@@ -1,12 +1,9 @@
 # RakNet Travis
-language: cpp
 
 matrix:
   include:
-  # Test gcc-5.0: C++1z
-    - env: GCC_VERSION=5 CPP=11 LIBCXX=Off
-
-os: linux
+    - os: linux
+      env: GCC_VERSION=5 CPP=11 LIBCXX=Off
 
 addons:
   apt:
