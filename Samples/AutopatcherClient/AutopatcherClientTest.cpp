@@ -226,7 +226,9 @@ int main(int argc, char **argv)
 		Gets(appDir,sizeof(appDir));
 		if (appDir[0]==0)
 		{
-			strcpy(appDir, "D:/temp2");
+			auto temp = std::experimental::filesystem::temp_directory_path().u8string();
+			if (appDir[0] == 0)
+				strcpy(appDir, temp.c_str());
 		}
 	}
 	else
@@ -254,7 +256,15 @@ int main(int argc, char **argv)
 		PATH_TO_XDELTA_EXE = input;
 		// https://code.google.com/p/xdelta/downloads/list
 		if (PATH_TO_XDELTA_EXE.empty())
-			PATH_TO_XDELTA_EXE = std::experimental::filesystem::path("c:/xdelta3-3.0.6-win32.exe");
+		{
+#ifdef _WIN32
+			if (PATH_TO_XDELTA_EXE.empty())
+				PATH_TO_XDELTA_EXE /= "./xdelta3-x86_64-3.0.10.exe";
+#else
+			if (PATH_TO_XDELTA_EXE.empty())
+				PATH_TO_XDELTA_EXE /= "/usr/local/bin/xdelta";
+#endif
+		}
 
 		if (!PATH_TO_XDELTA_EXE.empty())
 		{

@@ -240,8 +240,14 @@ int main(int argc, char** argv)
 	std::string input;
 	std::getline(std::cin, input);
 	pathToXdelta /= input;
+
+#ifdef _WIN32
 	if (pathToXdelta.empty())
-		pathToXdelta /= "c:/xdelta3-x86_64-3.0.10.exe";
+		pathToXdelta /= "./xdelta3-x86_64-3.0.10.exe";
+#else
+	if (pathToXdelta.empty())
+		pathToXdelta /= "/usr/local/bin/xdelta";
+#endif
 
 	if (!pathToXdelta.empty())
 	{
@@ -254,7 +260,7 @@ int main(int argc, char** argv)
 		if (!workingDirectory.empty())
 			workingDirectory = std::experimental::filesystem::temp_directory_path();
 	}
-
+	workingDirectory = std::experimental::filesystem::canonical(workingDirectory);
 	printf("(D)rop database\n(C)reate database.\n(A)dd application\n(U)pdate revision.\n(R)emove application\n(Q)uit\n");
 
 	char ch;
@@ -347,8 +353,9 @@ int main(int argc, char** argv)
 				printf("Enter application directory: ");
 				char appDir[512];
 				Gets(appDir, sizeof(appDir));
+				auto temp = std::experimental::filesystem::temp_directory_path().u8string();
 				if (appDir[0] == 0)
-					strcpy(appDir, "D:\\temp");
+					strcpy(appDir, temp.c_str());
 
 				if (connectionObject[0].UpdateApplicationFiles(appName, appDir, username, 0) == false)
 				{
