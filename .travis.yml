@@ -27,7 +27,7 @@ before_install:
     - sudo apt-get update
 
 install:
-    - sudo apt-get install cmake
+    - sudo apt-get install cmake cmake-data
 
 script:
   - export CHECKOUT_PATH=`pwd`;
