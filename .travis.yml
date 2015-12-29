@@ -1,11 +1,26 @@
 # RakNet Travis
 language: cpp
 
+compiler:
+  - gcc
+  - clang
+
 matrix:
   include:
   # Test gcc-5.0: C++1z
     - env: GCC_VERSION=5 CPP=1z LIBCXX=Off
-    -  os: linux
+
+os: linux
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.6
+    packages:
+      - gcc-5
+      - g++-5
+      - clang-3.6
 
 install:
   - sudo apt-get update -qq
