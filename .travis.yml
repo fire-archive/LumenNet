@@ -9,7 +9,7 @@ matrix:
 
 install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y -qq build-essential
+  - sudo apt-get install -y -qq build-essential gcc-5
 script:
 #  - mkdir build && cd build && cmake -DCOVERALLS=ON -DCMAKE_BUILD_TYPE=Debug .. && cmake --build . && cmake --build . --target coveralls
   - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_CXX__FLAGS=-std=c++1z CMAKE_SHARED_LINKER_FLAGS=-lstdc++fs .. && cmake --build . --target AutopatcherServer_PostgreSQL 
