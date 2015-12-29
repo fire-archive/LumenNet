@@ -31,6 +31,6 @@ script:
   - export CHECKOUT_PATH=`pwd`;
   - if [ -n "$GCC_VERSION" ]; then export CXX="g++-${GCC_VERSION}" CC="gcc-${GCC_VERSION}"; fi
   - mkdir build && cd build 
-  - cmake -DCMAKE_BUILD_TYPE=Debug ..
+  - cmake -DCMAKE_BUILD_TYPE=Debug -GNinja ..
   - cmake --build . --target AutopatcherServer_PostgreSQL
   - cmake --build . --target AutopatcherClient 
