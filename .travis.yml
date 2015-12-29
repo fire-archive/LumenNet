@@ -22,6 +22,13 @@ addons:
       - g++-5
       - clang-3.6
 
+before_install:
+    - sudo add-apt-repository ppa:george-edison55/cmake-3.x --yes
+    - sudo apt-get update
+
+install:
+    - sudo apt-get install cmake
+
 script:
   - export CHECKOUT_PATH=`pwd`;
   - if [ -n "$GCC_VERSION" ]; then export CXX="g++-${GCC_VERSION}" CC="gcc-${GCC_VERSION}"; fi
