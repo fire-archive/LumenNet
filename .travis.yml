@@ -1,9 +1,6 @@
 # RakNet Travis
 
-matrix:
-  include:
-    - os: linux
-      env: GCC_VERSION=5 CPP=11 LIBCXX=Off
+env: GCC_VERSION=5 CPP=11 LIBCXX=Off
 
 addons:
   apt:
