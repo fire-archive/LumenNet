@@ -129,7 +129,8 @@ public:
 			}
 			if (fpPatch==0)
 			{
-				printf("\nERROR: Could not open %s.\nerr=%i (%s)\narguments=%s\n", pathToPatch2, errno, strerror(errno), commandLine);
+				auto commandLineString = commandLine.string();
+				printf("\nERROR: Could not open %s.\nerr=%i (%s)\narguments=%s\n", pathToPatch2, errno, strerror(errno), commandLineString.c_str());
 				return PC_ERROR_PATCH_TARGET_MISSING;
 			}
 		

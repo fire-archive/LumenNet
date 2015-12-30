@@ -18,6 +18,9 @@ SOURCE_GROUP(MAIN FILES "AutopatcherClientTest.cpp")
 SOURCE_GROUP(BZip2Wrapper FILES ${WRAPFILES})
 add_executable(AutopatcherClient "AutopatcherClientTest.cpp" ${AUTOSRC} ${BZSRC} ${WRAPFILES} "readme.txt")
 target_link_libraries(AutopatcherClient ${RAKNET_COMMON_LIBS})
+if(!MSVC)
+  target_link_libraries(AutopatcherClient stdc++fs)
+endif()
 
 ##VSUBFOLDER(AutopatcherClient "Samples/AutoPatcher/Client")
 
