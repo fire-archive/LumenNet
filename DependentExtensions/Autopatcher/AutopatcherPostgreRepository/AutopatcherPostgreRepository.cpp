@@ -1812,11 +1812,11 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 			std::string temp;
 			temp=PQgetvalue(result, 0, contentColumnIndex);
 			std::experimental::filesystem::path pathToOldContent = std::experimental::filesystem::canonical(std::experimental::filesystem::path(temp));
+			auto pathToNewContentU8 = pathToNewContent.u8string();
 			if (pathToNewContent.compare(pathToOldContent) == 0)
 			{
 //				rakFree_Ex(newContent, _FILE_AND_LINE_);
-
-				sprintf(lastError,"New file version cannot have the same path as the old file version. Path=%s.\n", pathToNewContent);
+				sprintf(lastError,"New file version cannot have the same path as the old file version. Path=%s.\n", pathToNewContentU8.c_str());
 				Rollback();
 
 				newFiles.Clear();
@@ -1825,7 +1825,7 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 				return false;
 			}
 
-			printf("%i/%i.%i/%i DIFF from %s to %s ...", fileListIndex+1, newFiles.fileList.Size(), rowIndex+1, numRows, pathToOldContent, pathToNewContent);
+			printf("%i/%i.%i/%i DIFF from %s to %s ...", fileListIndex+1, newFiles.fileList.Size(), rowIndex+1, numRows, pathToOldContent, pathToNewContent.c_str());
 			int patchAlgorithm;
 			auto pathToNewContentU8 = pathToNewContent.u8string();
 			auto pathToOldContentU8 = pathToOldContent.u8string();
