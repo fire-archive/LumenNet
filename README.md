@@ -6,6 +6,10 @@ Copyright (c) 2014, Oculus VR, Inc.
 Fork notes [updated 23-December-2015]
 ------------------------------------------
 
+International characters cannot be sent.
+
+If the folder size is over 4 GB a counter overflows.
+
 This fork contains most of the pending pull requests from the official Oculus VR original.
 
 This fork also contains other various fixes that I've found necessary - mostly addressing compilation issues on various platforms.
