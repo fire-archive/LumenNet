@@ -152,9 +152,9 @@ public:
 					unlinkRes2 = std::experimental::filesystem::remove(pathToPatch2);
 			}
 
-			if (unlinkRes1!=0)
+			if (unlinkRes1 == false)
 				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch1U8.c_str(), errno, strerror(errno));
-			if (unlinkRes2!=0)
+			if (unlinkRes2 == false)
 				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch2U8.c_str(), errno, strerror(errno));
 
 			return PC_WRITE_FILE;
