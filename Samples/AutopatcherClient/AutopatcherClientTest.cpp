@@ -141,23 +141,26 @@ public:
 			fread(*newFileContents, 1, *newFileSize, fpPatch);
 			fclose(fpPatch);
 
-			int unlinkRes1 = std::experimental::filesystem::remove(pathToPatch1);
-			int unlinkRes2 = std::experimental::filesystem::remove(pathToPatch2);
 			std::error_code errorCode1;
 			std::error_code errorCode2;
-			while ((unlinkRes1!=0 || unlinkRes2!=0) && RakNet::GetTimeUS() < stopWaiting)
+
+			int unlinkRes1 = std::experimental::filesystem::remove(pathToPatch1, errorCode1);
+			int unlinkRes2 = std::experimental::filesystem::remove(pathToPatch2, errorCode2);
+
+			while ((unlinkRes1 == false || unlinkRes2) && RakNet::GetTimeUS() < stopWaiting)
 			{
 				RakSleep(1000);
-				if (unlinkRes1!=0)
+				if (unlinkRes1 == false)
 					unlinkRes1 = std::experimental::filesystem::remove(pathToPatch1, errorCode1);
-				if (unlinkRes2!=0)
+				if (unlinkRes2 == false)
 					unlinkRes2 = std::experimental::filesystem::remove(pathToPatch2, errorCode2);
 			}
-
+			auto errorCode1String = errorCode1.message();
+			auto errorCode2String = errorCode2.message();
 			if (unlinkRes1 == false)
-				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch1U8.c_str(), errorCode1.value(), errorCode1.message().c_str());
+				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch1U8.c_str(), errorCode1.value(), errorCode1String.c_str());
 			if (unlinkRes2 == false)
-				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch2U8.c_str(), errorCode1.value(), errorCode2.message().c_str());
+				printf("\nWARNING: unlink %s failed.\nerr=%i (%s)\n", pathToPatch2U8.c_str(), errorCode1.value(), errorCode2String.c_str());
 
 			return PC_WRITE_FILE;
 		}
