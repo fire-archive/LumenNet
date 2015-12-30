@@ -1828,7 +1828,6 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 
 			printf("%i/%i.%i/%i DIFF from %s to %s ...", fileListIndex+1, newFiles.fileList.Size(), rowIndex+1, numRows, pathToOldContent.c_str(), pathToNewContent.c_str());
 			int patchAlgorithm;
-			auto pathToOldContentU8 = pathToOldContent.u8string();
 			int makePatchResult=MakePatch(pathToOldContentU8.c_str(), pathToNewContentU8.c_str(), &patch, &patchLength, &patchAlgorithm);
 			if (makePatchResult < 0 || makePatchResult == 2)
 			{
