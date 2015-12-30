@@ -1812,6 +1812,7 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 			std::string temp;
 			temp=PQgetvalue(result, 0, contentColumnIndex);
 			std::experimental::filesystem::path pathToOldContent = std::experimental::filesystem::canonical(std::experimental::filesystem::path(temp));
+			auto pathToOldContentU8 = pathToOldContent.u8string();
 			auto pathToNewContentU8 = pathToNewContent.u8string();
 			if (pathToNewContent.compare(pathToOldContent) == 0)
 			{
@@ -1825,9 +1826,8 @@ bool AutopatcherPostgreRepository2::UpdateApplicationFiles(const char *applicati
 				return false;
 			}
 
-			printf("%i/%i.%i/%i DIFF from %s to %s ...", fileListIndex+1, newFiles.fileList.Size(), rowIndex+1, numRows, pathToOldContent, pathToNewContent.c_str());
+			printf("%i/%i.%i/%i DIFF from %s to %s ...", fileListIndex+1, newFiles.fileList.Size(), rowIndex+1, numRows, pathToOldContent.c_str(), pathToNewContent.c_str());
 			int patchAlgorithm;
-			auto pathToNewContentU8 = pathToNewContent.u8string();
 			auto pathToOldContentU8 = pathToOldContent.u8string();
 			int makePatchResult=MakePatch(pathToOldContentU8.c_str(), pathToNewContentU8.c_str(), &patch, &patchLength, &patchAlgorithm);
 			if (makePatchResult < 0 || makePatchResult == 2)
