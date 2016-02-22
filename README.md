@@ -1,10 +1,5 @@
-iFire's fork of RakNet 4.081
+LumenNet is based on RakNet
 ============
-
-Copyright (c) 2014, Oculus VR, Inc.
-
-Fork notes [updated 23-December-2015]
-------------------------------------------
 
 International characters cannot be sent.
 
