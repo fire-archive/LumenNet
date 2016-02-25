@@ -1,6 +1,8 @@
 LumenNet is based on RakNet
 ============
 
+[Documentation](https://lumennet.readme.io/)
+
 International characters cannot be sent.
 
 If the folder size is over 4 GB a counter overflows.
