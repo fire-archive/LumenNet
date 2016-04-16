@@ -11,90 +11,97 @@ games.
 
 On the client, you need an instance of AutopatcherClient. The server
 needs an instance of AutopatcherServer. The code for those classes is
-not part of RakNet core. They are located at .\\DependentExtensions\\ ,
+not part of RakNet core. They are located at `.\DependentExtensions\` ,
 and you need to add them to your project.
 
-**On the client side**
+## On the client side
 
 On the client side, most work is done with just a couple of methods of
 AutopatcherClient.
 
-<span class="RakNetCode">void SetFileListTransferPlugin(FileListTransfer
-\*flt);</span>
+```c++
+void SetFileListTransferPlugin(FileListTransfer *flt);
+```
 
 This plugin has a dependency on the FileListTransfer plugin, which it
 uses to actually send the files. So you need an instance of that plugin
 registered with RakPeerInterface, and a pointer to that interface should
 be passed in this function.
 
-<span class="RakNetCode">bool PatchApplication(const char
-\*\_applicationName, const char \*\_applicationDirectory, const char
-\*lastUpdateDate, SystemAddress host, FileListTransferCBInterface
-\*onFileCallback, const char \*restartOutputFilename, const char
-\*pathToRestartExe); </span>
+```c++
+bool PatchApplication(const char * _applicationName,
+                      const char * _applicationDirectory,
+                      const char * lastUpdateDate,
+                      SystemAddress host,
+                      FileListTransferCBInterface *onFileCallback,
+                      const char *restartOutputFilename,
+                      const char *pathToRestartExe);
+```
 
 Patches a certain directory associated with a named application to match
 the same named application on the patch server
 
-*\_applicationName* - The name of the application\
-*\_applicationDirectory* - The directory to write the output to.\
-*lastUpdateDate* - A string representing the last time you updated from
+* *\_applicationName* - The name of the application\
+* *\_applicationDirectory* - The directory to write the output to.\
+* *lastUpdateDate* - A string representing the last time you updated from
 the patch server, so you only check newer files. Should be 0 the first
 time, or if you want to do a full scan. Returned in GetServerDate()
 after you call PatchApplication successfully.\
-*host* - The address of the remote system to send the message to.\
-*onFileCallback* - Callback to call per-file (optional). When
+* *host* - The address of the remote system to send the message to.\
+* *onFileCallback* - Callback to call per-file (optional). When
 fileIndex+1==setCount in the callback then the download is done.\
-*\_restartOutputFilename* - If it is necessary to restart this
+* *\_restartOutputFilename* - If it is necessary to restart this
 application, where to write the restart data to. You can include a path
 in this filename.\
-*pathToRestartExe* - What exe to launch from the
+* *pathToRestartExe* - What exe to launch from the
 AutopatcherClientRestarter . argv\[0\] will work to relaunch this
 application.\
 
 There are other functions and classes involved in the client side, but
 you should study the sample at *\\Samples\\AutopatcherClient*.
 
-**On the server side**
+## On the server side
 
 On the client side, you use an instance of AutopatcherServer.
 
-<span class="RakNetCode"> void
-SetFileListTransferPlugin(FileListTransfer \*flt);</span>\
+```c++
+void SetFileListTransferPlugin(FileListTransfer *flt);
+```
+
 Like AutopatcherClient, this plugin also has a dependency on the
 FileListTransfer plugin, which it uses to actually send the files. So
 you need an instance of that plugin registered with RakPeerInterface,
-and a pointer to that interface should be passed here.\
+and a pointer to that interface should be passed here.
 
-<span class="RakNetCode">void
-SetAutopatcherRepositoryInterface(AutopatcherRepositoryInterface
-\*ari);</span>\
+```c++
+void SetAutopatcherRepositoryInterface(AutopatcherRepositoryInterface *ari);
+```
+
 With the function, you tell AutopatchServer how to take care of the
 network transfer of the patchs. This class only does the network
 transfers for the autopatcher. All the data is stored in a repository.
 Pass the interface to your repository with this function. RakNet comes
-with AutopatcherPostgreRepository if you wish to use that.\
+with AutopatcherPostgreRepository if you wish to use that.
 
-Check the sample at *\\Samples\\AutoPatcherServer*. It uses an
+Check the sample at `\Samples\AutoPatcherServer`. It uses an
 implementation of AutopatcherRepositoryInterface for PostgreSQL
 (AutopatcherPostgreRepository), to store all the files of an application
 in a PostgreSQL database.
 
-**Directory structure**
+## Directory structure
 
 It's possible to use directory structures. For example, suppose you have
 the following directory structure for your application:\
 
-Readme.txt\
-Music/Song1.wav\
-Music/Song2.wav\
+* Readme.txt
+* Music/Song1.wav
+* Music/Song2.wav
 
 The Autopatcher will keep directories structures intact. So if the       
 sending system has that directory structure, the downloading system will
 mirror this directory structure.
 
-**Server required files (using
-[PostgreSQL](http://www.postgresql.org/)):**
+## Server required files [using PostgreSQL](http://www.postgresql.org/):
 
 -   All source files in DependentExtensions\\bzip2-1.0.3
 -   DependentExtensions\\CreatePatch.h and .cpp
@@ -106,8 +113,7 @@ DependentExtensions\\AutopatcherPostgreRepository
 -   All source files in Samples\\AutopatcherServer, should you want to
 use the default console application to run the server.
 
-**Server Dependencies (using
-[PostgreSQL](http://www.postgresql.org/)):**
+## Server Dependencies using [PostgreSQL](http://www.postgresql.org/):
 
 PostgreSQL 8.2 or newer, installed at C:\\Program
 Files\\PostgreSQL\\8.2. Change the project property paths should your
@@ -115,7 +121,7 @@ installation directory be different. Do not forget to check development
 tools in the PostgreSQL installer or the headers and libs will not be
 installed.
 
-**Client required files**
+## Client required files
 
 -   All source files in DependentExtensions\\bzip2-1.0.3
 -   DependentExtensions\\MemoryCompressor.h and .cpp
@@ -127,7 +133,7 @@ use the default console application as a design template.
 want to use the default console application to restart the
 autopatcher after it patches itself.
 
-**Using TCP instead of UDP (recommended)**
+## Using TCP instead of UDP (recommended)
 
 RakPeerInterfaces uses UDP, which is a problem if RakNet's protocol
 changes - the autopatcher wouldn't be able to connect to the new
@@ -145,7 +151,7 @@ HasLostConnection(), rather than byte identifiers.
 3.  Attach the plugin to your instance of PacketizedTCP instead of
 RakPeerInterface
 
-**Optimizing for large games:**
+## Optimizing for large games:
 
 AutopatcherClient::PatchApplication has a parameter lastUpdateDate. If 0
 is passed for this parameter, the server does not know what version the
@@ -196,7 +202,7 @@ parameter of next call to AutopatcherClient::PatchApplication\
 7.  With CacheMostRecentPatch(), only the most recent patch is stored in
 memory, so do not call UpdateApplicationFiles pointlessly.
 
-**Notes on memory usage:**
+## Notes on memory usage:
 
 Patches are created with code from Colin Percival
 <http://www.daemonology.net/bsdiff/>. The patching algorithm uses [Larsson and Sadakane's qsufsort](http://www.cs.lth.se/Research/Algorithms/Papers/jesper5.ps)
