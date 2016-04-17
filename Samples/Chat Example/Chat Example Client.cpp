@@ -190,7 +190,7 @@ int main(void)
 
 			if (strcmp(message, "startup")==0)
 			{
-				bool b = client->Startup(8,&socketDescriptor, 1)==RakNet::RAKNET_STARTED;
+				bool b = client->Startup(8,&socketDescriptor, 1)==RakNet::StartupResult::RAKNET_STARTED;
 				if (b)
 					printf("Started.\n");
 				else
@@ -212,9 +212,9 @@ int main(void)
 					strcpy(serverPort, "1234");
 
 #if LIBCAT_SECURITY==1
-				bool b = client->Connect(ip, atoi(serverPort), "Rumpelstiltskin", (int) strlen("Rumpelstiltskin"), &pk)==RakNet::CONNECTION_ATTEMPT_STARTED;	
+				bool b = client->Connect(ip, atoi(serverPort), "Rumpelstiltskin", (int) strlen("Rumpelstiltskin"), &pk)==RakNet::ConnectionAttemptResult::CONNECTION_ATTEMPT_STARTED;
 #else
-				bool b = client->Connect(ip, atoi(serverPort), "Rumpelstiltskin", (int) strlen("Rumpelstiltskin"))==RakNet::CONNECTION_ATTEMPT_STARTED;	
+				bool b = client->Connect(ip, atoi(serverPort), "Rumpelstiltskin", (int) strlen("Rumpelstiltskin"))==RakNet::ConnectionAttemptResult::CONNECTION_ATTEMPT_STARTED;
 #endif
 
 				if (b)
