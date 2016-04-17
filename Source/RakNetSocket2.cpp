@@ -21,18 +21,18 @@ using namespace RakNet;
 
 #ifdef _WIN32
 #else
-#include <arpa/inet.h>
-#include <errno.h> // error numbers
-#include <fcntl.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
+#include <errno.h>  // error numbers
 #if !defined(ANDROID)
 #include <ifaddrs.h>
 #endif
-#include <net/if.h>
 #include <netinet/in.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
+#include <net/if.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
 #endif
 
 #ifdef TEST_NATIVE_CLIENT_ON_WINDOWS
