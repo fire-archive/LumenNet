@@ -77,6 +77,7 @@ void RakNetCommandParser::SetRakPeerInterface(RakNet::RakPeerInterface *rakPeer)
 {
 	peer=rakPeer;
 }
+
 bool RakNetCommandParser::OnCommand(const char *command, unsigned numParameters, char **parameterList, TransportInterface *transport, const SystemAddress &systemAddress, const char *originalString)
 {
 	(void) originalString;
@@ -88,7 +89,7 @@ bool RakNetCommandParser::OnCommand(const char *command, unsigned numParameters,
 	if (strcmp(command, "Startup")==0)
 	{
 		RakNet::SocketDescriptor socketDescriptor((unsigned short)atoi(parameterList[1]), parameterList[2]);
-		ReturnResult(peer->Startup((unsigned short)atoi(parameterList[0]), &socketDescriptor, 1), command, transport, systemAddress);
+		ReturnResult(static_cast<int>(peer->Startup((unsigned short)atoi(parameterList[0]), &socketDescriptor, 1)), command, transport, systemAddress);
 	}
 	else if (strcmp(command, "InitializeSecurity")==0)
 	{
@@ -124,7 +125,7 @@ bool RakNetCommandParser::OnCommand(const char *command, unsigned numParameters,
 	}
 	else if (strcmp(command, "Connect")==0)
 	{
-		ReturnResult(peer->Connect(parameterList[0], (unsigned short)atoi(parameterList[1]),parameterList[2],atoi(parameterList[3]))==RakNet::CONNECTION_ATTEMPT_STARTED, command, transport, systemAddress);
+		ReturnResult(peer->Connect(parameterList[0], (unsigned short)atoi(parameterList[1]),parameterList[2],atoi(parameterList[3]))==RakNet::ConnectionAttemptResult::CONNECTION_ATTEMPT_STARTED, command, transport, systemAddress);
 	}
 	else if (strcmp(command, "Disconnect")==0)
 	{

@@ -157,7 +157,7 @@ bool FullyConnectedMesh2::AddParticipantInternal( RakNetGUID rakNetGuid, FCM2Gui
 }
 void FullyConnectedMesh2::AddParticipant( RakNetGUID rakNetGuid )
 {
-	if (rakPeerInterface->GetConnectionState(rakPeerInterface->GetSystemAddressFromGuid(rakNetGuid))!=IS_CONNECTED)
+	if (rakPeerInterface->GetConnectionState(rakPeerInterface->GetSystemAddressFromGuid(rakNetGuid))!= ConnectionState::IS_CONNECTED)
 	{
 #ifdef DEBUG_FCM2
 		printf("AddParticipant to %s failed (not connected)\n", rakNetGuid.ToString());
@@ -1252,8 +1252,8 @@ void FullyConnectedMesh2::OnVerifiedJoinAccepted(Packet *packet)
 	{
 		// Another system
 		ConnectionState cs = rakPeerInterface->GetConnectionState(systemToAddGuid);
-		RakAssert(cs==IS_CONNECTED);
-		if (cs==IS_CONNECTED)
+		RakAssert(cs== ConnectionState::IS_CONNECTED);
+		if (cs== ConnectionState::IS_CONNECTED)
 			AddParticipant(systemToAddGuid);
 	}
 }
@@ -1348,9 +1348,9 @@ void FullyConnectedMesh2::ReadVerifiedJoinInProgressMember(RakNet::BitStream *bs
 	bsIn->Read(vjipm->guid);
 	bsIn->Read(vjipm->systemAddress);
 	ConnectionState cs = rakPeerInterface->GetConnectionState(vjipm->guid);
-	if (cs==IS_CONNECTED)
+	if (cs== ConnectionState::IS_CONNECTED)
 		vjipm->joinInProgressState=JIPS_CONNECTED;
-	else if (cs==IS_DISCONNECTING || cs==IS_SILENTLY_DISCONNECTING)
+	else if (cs== ConnectionState::IS_DISCONNECTING || cs== ConnectionState::IS_SILENTLY_DISCONNECTING)
 		vjipm->joinInProgressState=JIPS_FAILED;
 	else
 		vjipm->joinInProgressState=JIPS_PROCESSING;

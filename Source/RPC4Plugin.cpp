@@ -346,7 +346,7 @@ bool RPC4::CallBlocking( const char* uniqueID, RakNet::BitStream * bitStream, Pa
 	RakAssert(rakPeerInterface);
 	ConnectionState cs;
 	cs = rakPeerInterface->GetConnectionState(systemIdentifier);
-	if (cs!=IS_CONNECTED)
+	if (cs!= ConnectionState::IS_CONNECTED)
 		return false;
 
 	SendUnified(&out,priority,reliability,orderingChannel,systemIdentifier,false);

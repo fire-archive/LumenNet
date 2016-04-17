@@ -1128,7 +1128,7 @@ void CloudServer::NotifyServerSubscribersOfDataChange( CloudData *cloudData, Clo
 void CloudServer::AddServer(RakNetGUID systemIdentifier)
 {
 	ConnectionState cs = rakPeerInterface->GetConnectionState(systemIdentifier);
-	if (cs==IS_DISCONNECTED || cs==IS_NOT_CONNECTED)
+	if (cs== ConnectionState::IS_DISCONNECTED || cs== ConnectionState::IS_NOT_CONNECTED)
 		return;
 	bool objectExists;
 	unsigned int index = remoteServers.GetIndexFromKey(systemIdentifier,&objectExists);

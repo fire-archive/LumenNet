@@ -246,7 +246,7 @@ void UDPProxyCoordinator::OnForwardingRequestFromClientToCoordinator(Packet *pac
 		return;
 	}
 
-	if (rakPeerInterface->GetConnectionState(targetAddress)!=IS_CONNECTED && usesAddress==false)
+	if (rakPeerInterface->GetConnectionState(targetAddress)!= ConnectionState::IS_CONNECTED && usesAddress==false)
 	{
 		outgoingBs.Write((MessageID)ID_UDP_PROXY_GENERAL);
 		outgoingBs.Write((MessageID)ID_UDP_PROXY_RECIPIENT_GUID_NOT_CONNECTED_TO_COORDINATOR);

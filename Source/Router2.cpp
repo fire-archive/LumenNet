@@ -212,7 +212,7 @@ void Router2::SetSocketFamily(unsigned short _socketFamily)
 void Router2::EstablishRouting(RakNetGUID endpointGuid)
 {
 	ConnectionState cs = rakPeerInterface->GetConnectionState(endpointGuid);
-	if (cs!=IS_DISCONNECTED && cs!=IS_NOT_CONNECTED)
+	if (cs!= ConnectionState::IS_DISCONNECTED && cs!= ConnectionState::IS_NOT_CONNECTED)
 	{
 		char buff[512];
 		if (debugInterface)	debugInterface->ShowFailure(FormatStringTS(buff,"Router2 failed at %s:%i "

@@ -25,7 +25,6 @@
 #include "RakNetTime.h"
 #include "Export.h"
 #include "WindowsIncludes.h"
-#include "XBox360Includes.h"
 #include "SocketIncludes.h"
 
 
@@ -38,7 +37,7 @@ class RakPeerInterface;
 class BitStream;
 struct Packet;
 
-enum StartupResult
+enum class StartupResult
 {
 	RAKNET_STARTED,
 	RAKNET_ALREADY_STARTED,
@@ -55,7 +54,7 @@ enum StartupResult
 };
 
 
-enum ConnectionAttemptResult
+enum class ConnectionAttemptResult
 {
 	CONNECTION_ATTEMPT_STARTED,
 	INVALID_PARAMETER,
@@ -66,7 +65,7 @@ enum ConnectionAttemptResult
 };
 
 /// Returned from RakPeerInterface::GetConnectionState()
-enum ConnectionState
+enum class ConnectionState
 {
 	/// Connect() was called, but the process hasn't started yet
 	IS_PENDING,
@@ -107,7 +106,7 @@ typedef uint32_t BitSize_t;
 #endif
 
 /// Used with the PublicKey structure
-enum PublicKeyMode
+enum class PublicKeyMode
 {
 	/// The connection is insecure. You can also just pass 0 for the pointer to PublicKey in RakPeerInterface::Connect()
 	PKM_INSECURE_CONNECTION,

@@ -53,7 +53,7 @@ NatPunchthroughClient::~NatPunchthroughClient()
 void NatPunchthroughClient::FindRouterPortStride(const SystemAddress &facilitator)
 {
 	ConnectionState cs = rakPeerInterface->GetConnectionState(facilitator);
-	if (cs!=IS_CONNECTED)
+	if (cs!= ConnectionState::IS_CONNECTED)
 		return;
 	if (hasPortStride!=UNKNOWN_PORT_STRIDE)
 		return;
@@ -73,7 +73,7 @@ void NatPunchthroughClient::FindRouterPortStride(const SystemAddress &facilitato
 bool NatPunchthroughClient::OpenNAT(RakNetGUID destination, const SystemAddress &facilitator)
 {
 	ConnectionState cs = rakPeerInterface->GetConnectionState(facilitator);
-	if (cs!=IS_CONNECTED)
+	if (cs!= ConnectionState::IS_CONNECTED)
 		return false;
 	if (hasPortStride==UNKNOWN_PORT_STRIDE)
 	{
@@ -388,7 +388,7 @@ void NatPunchthroughClient::OnPunchthroughFailure(void)
 		}
 	}
 
-	if (rakPeerInterface->GetConnectionState(sp.facilitator)!=IS_CONNECTED)
+	if (rakPeerInterface->GetConnectionState(sp.facilitator)!=ConnectionState::IS_CONNECTED)
 	{
 		if (natPunchthroughDebugInterface)
 		{

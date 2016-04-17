@@ -43,7 +43,7 @@ bool UDPProxyClient::RequestForwarding(SystemAddress proxyCoordinator, SystemAdd
 {
 	// Return false if not connected 
 	ConnectionState cs = rakPeerInterface->GetConnectionState(proxyCoordinator);
-	if (cs!=IS_CONNECTED)
+	if (cs!= ConnectionState::IS_CONNECTED)
 		return false;
 
 	// Pretty much a bug not to set the result handler, as otherwise you won't know if the operation succeeed or not
@@ -75,7 +75,7 @@ bool UDPProxyClient::RequestForwarding(SystemAddress proxyCoordinator, SystemAdd
 {
 	// Return false if not connected 
 	ConnectionState cs = rakPeerInterface->GetConnectionState(proxyCoordinator);
-	if (cs!=IS_CONNECTED)
+	if (cs!= ConnectionState::IS_CONNECTED)
 		return false;
 
 	// Pretty much a bug not to set the result handler, as otherwise you won't know if the operation succeeed or not

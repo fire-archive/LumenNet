@@ -101,14 +101,14 @@ _CONSOLE_2_SetSystemProcessParams
 	socketDescriptors[0].socketFamily = AF_INET; // Test out IPV4
 	socketDescriptors[1].port = atoi(portstring);
 	socketDescriptors[1].socketFamily = AF_INET6; // Test out IPV6
-	bool b = server->Startup(4, socketDescriptors, 2) == RakNet::RAKNET_STARTED;
+	bool b = server->Startup(4, socketDescriptors, 2) == RakNet::StartupResult::RAKNET_STARTED;
 	server->SetMaximumIncomingConnections(4);
 	if (!b)
 	{
 		printf("Failed to start dual IPV4 and IPV6 ports. Trying IPV4 only.\n");
 
 		// Try again, but leave out IPV6
-		b = server->Startup(4, socketDescriptors, 1) == RakNet::RAKNET_STARTED;
+		b = server->Startup(4, socketDescriptors, 1) == RakNet::StartupResult::RAKNET_STARTED;
 		if (!b)
 		{
 			puts("Server failed to start.  Terminating.");

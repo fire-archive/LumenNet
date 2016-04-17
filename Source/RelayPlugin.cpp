@@ -40,7 +40,7 @@ RelayPlugin::~RelayPlugin()
 RelayPluginEnums RelayPlugin::AddParticipantOnServer(const RakString &key, const RakNetGUID &guid)
 {
 	ConnectionState cs = rakPeerInterface->GetConnectionState(guid);
-	if (cs!=IS_CONNECTED)
+	if (cs!=ConnectionState::IS_CONNECTED)
 		return RPE_ADD_CLIENT_TARGET_NOT_CONNECTED;
 
 	if (strToGuidHash.HasData(key)==true)

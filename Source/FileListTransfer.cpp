@@ -116,7 +116,7 @@ void FileListTransfer::StartIncrementalReadThreads(int numThreads, int threadPri
 }
 unsigned short FileListTransfer::SetupReceive(FileListTransferCBInterface *handler, bool deleteHandler, SystemAddress allowedSender)
 {
-	if (rakPeerInterface && rakPeerInterface->GetConnectionState(allowedSender)!=IS_CONNECTED)
+	if (rakPeerInterface && rakPeerInterface->GetConnectionState(allowedSender)!=ConnectionState::IS_CONNECTED)
 		return (unsigned short)-1;
 	FileListReceiver *receiver;
 

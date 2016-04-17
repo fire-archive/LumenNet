@@ -310,14 +310,14 @@ RakPeer::~RakPeer()
 StartupResult RakPeer::Startup(unsigned int maxConnections, SocketDescriptor* socketDescriptors, unsigned socketDescriptorCount, int threadPriority)
 {
 	if (IsActive())
-		return RAKNET_ALREADY_STARTED;
+		return StartupResult::RAKNET_ALREADY_STARTED;
 
 	// If getting the guid failed in the constructor, try again
 	if (myGuid.g == 0)
 	{
 		GenerateGUID();
 		if (myGuid.g == 0)
-			return COULD_NOT_GENERATE_GUID;
+			return StartupResult::COULD_NOT_GENERATE_GUID;
 	}
 
 	if (threadPriority == -99999)
@@ -344,7 +344,7 @@ StartupResult RakPeer::Startup(unsigned int maxConnections, SocketDescriptor* so
 	RakAssert(socketDescriptors && socketDescriptorCount >= 1);
 
 	if (socketDescriptors == 0 || socketDescriptorCount < 1)
-		return INVALID_SOCKET_DESCRIPTORS;
+		return StartupResult::INVALID_SOCKET_DESCRIPTORS;
 
 	//unsigned short localPort;
 	//localPort=socketDescriptors[0].port;
@@ -352,7 +352,7 @@ StartupResult RakPeer::Startup(unsigned int maxConnections, SocketDescriptor* so
 	RakAssert(maxConnections > 0);
 
 	if (maxConnections <= 0)
-		return INVALID_MAX_CONNECTIONS;
+		return StartupResult::INVALID_MAX_CONNECTIONS;
 
 	DerefAllSockets();
 
@@ -442,19 +442,19 @@ StartupResult RakPeer::Startup(unsigned int maxConnections, SocketDescriptor* so
 			{
 				RakNetSocket2Allocator::DeallocRNS2(r2);
 				DerefAllSockets();
-				return SOCKET_FAMILY_NOT_SUPPORTED;
+				return StartupResult::SOCKET_FAMILY_NOT_SUPPORTED;
 			}
 			else if (br == BR_FAILED_TO_BIND_SOCKET)
 			{
 				RakNetSocket2Allocator::DeallocRNS2(r2);
 				DerefAllSockets();
-				return SOCKET_PORT_ALREADY_IN_USE;
+				return StartupResult::SOCKET_PORT_ALREADY_IN_USE;
 			}
 			else if (br == BR_FAILED_SEND_TEST)
 			{
 				RakNetSocket2Allocator::DeallocRNS2(r2);
 				DerefAllSockets();
-				return SOCKET_FAILED_TEST_SEND;
+				return StartupResult::SOCKET_FAILED_TEST_SEND;
 			}
 			else
 			{
@@ -590,7 +590,7 @@ StartupResult RakPeer::Startup(unsigned int maxConnections, SocketDescriptor* so
 			if (errorCode != 0)
 			{
 				Shutdown(0, 0);
-				return FAILED_TO_CREATE_NETWORK_THREAD;
+				return StartupResult::FAILED_TO_CREATE_NETWORK_THREAD;
 			}
 //					RakAssert(isRecvFromLoopThreadActive.GetValue()==0);
 #endif // RAKPEER_USER_THREADED!=1
@@ -651,7 +651,7 @@ StartupResult RakPeer::Startup(unsigned int maxConnections, SocketDescriptor* so
 	RakNet::SendToThread::AddRef();
 #endif
 
-	return RAKNET_STARTED;
+	return StartupResult::RAKNET_STARTED;
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -903,7 +903,7 @@ ConnectionAttemptResult RakPeer::Connect(const char* host, unsigned short remote
 {
 	// If endThreads is true here you didn't call Startup() first.
 	if (host == 0 || endThreads || connectionSocketIndex >= socketList.Size())
-		return INVALID_PARAMETER;
+		return ConnectionAttemptResult::INVALID_PARAMETER;
 
 	RakAssert(remotePort != 0);
 
@@ -934,7 +934,7 @@ ConnectionAttemptResult RakPeer::Connect(const char* host, unsigned short remote
 ConnectionAttemptResult RakPeer::ConnectWithSocket(const char* host, unsigned short remotePort, const char* passwordData, int passwordDataLength, RakNetSocket2* socket, PublicKey* publicKey, unsigned sendConnectionAttemptCount, unsigned timeBetweenSendConnectionAttemptsMS, RakNet::TimeMS timeoutTime)
 {
 	if (host == 0 || endThreads || socket == 0)
-		return INVALID_PARAMETER;
+		return ConnectionAttemptResult::INVALID_PARAMETER;
 
 	if (passwordDataLength > 255)
 		passwordDataLength = 255;
@@ -1571,7 +1571,7 @@ void RakPeer::CloseConnection(const AddressOrGUID target, bool sendDisconnection
 	CloseConnectionInternal(target, sendDisconnectionNotification, false, orderingChannel, disconnectionNotificationPriority);
 
 	// 12/14/09 Return ID_CONNECTION_LOST when calling CloseConnection with sendDisconnectionNotification==false, elsewise it is never returned
-	if (sendDisconnectionNotification == false && GetConnectionState(target) == IS_CONNECTED)
+	if (sendDisconnectionNotification == false && GetConnectionState(target) == ConnectionState::IS_CONNECTED)
 	{
 		Packet* packet = AllocPacket(sizeof(char), _FILE_AND_LINE_);
 		packet->data[0] = ID_CONNECTION_LOST; // DeadConnection
@@ -1644,7 +1644,7 @@ ConnectionState RakPeer::GetConnectionState(const AddressOrGUID systemIdentifier
 			if (requestedConnectionQueue[i]->systemAddress == systemIdentifier.systemAddress)
 			{
 				requestedConnectionQueueMutex.Unlock();
-				return IS_PENDING;
+				return ConnectionState::IS_PENDING;
 			}
 		}
 		requestedConnectionQueueMutex.Unlock();
@@ -1661,32 +1661,32 @@ ConnectionState RakPeer::GetConnectionState(const AddressOrGUID systemIdentifier
 	}
 
 	if (index == -1)
-		return IS_NOT_CONNECTED;
+		return ConnectionState::IS_NOT_CONNECTED;
 
 	if (remoteSystemList[index].isActive == false)
-		return IS_DISCONNECTED;
+		return ConnectionState::IS_DISCONNECTED;
 
 	switch (remoteSystemList[index].connectMode)
 	{
 	case RemoteSystemStruct::DISCONNECT_ASAP:
-		return IS_DISCONNECTING;
+		return ConnectionState::IS_DISCONNECTING;
 	case RemoteSystemStruct::DISCONNECT_ASAP_SILENTLY:
-		return IS_SILENTLY_DISCONNECTING;
+		return ConnectionState::IS_SILENTLY_DISCONNECTING;
 	case RemoteSystemStruct::DISCONNECT_ON_NO_ACK:
-		return IS_DISCONNECTING;
+		return ConnectionState::IS_DISCONNECTING;
 	case RemoteSystemStruct::REQUESTED_CONNECTION:
-		return IS_CONNECTING;
+		return ConnectionState::IS_CONNECTING;
 	case RemoteSystemStruct::HANDLING_CONNECTION_REQUEST:
-		return IS_CONNECTING;
+		return ConnectionState::IS_CONNECTING;
 	case RemoteSystemStruct::UNVERIFIED_SENDER:
-		return IS_CONNECTING;
+		return ConnectionState::IS_CONNECTING;
 	case RemoteSystemStruct::CONNECTED:
-		return IS_CONNECTED;
+		return ConnectionState::IS_CONNECTED;
 	default:
-		return IS_NOT_CONNECTED;
+		return ConnectionState::IS_NOT_CONNECTED;
 	}
 
-	return IS_NOT_CONNECTED;
+	return ConnectionState::IS_NOT_CONNECTED;
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3168,11 +3168,11 @@ ConnectionAttemptResult RakPeer::SendConnectionRequest(const char* host, unsigne
 	RakAssert(remotePort != 0);
 	SystemAddress systemAddress;
 	if (!systemAddress.FromStringExplicitPort(host, remotePort, socketList[connectionSocketIndex]->GetBoundAddress().GetIPVersion()))
-		return CANNOT_RESOLVE_DOMAIN_NAME;
+		return  ConnectionAttemptResult::CANNOT_RESOLVE_DOMAIN_NAME;
 
 	// Already connected?
 	if (GetRemoteSystemFromSystemAddress(systemAddress, false, true))
-		return ALREADY_CONNECTED_TO_ENDPOINT;
+		return  ConnectionAttemptResult::ALREADY_CONNECTED_TO_ENDPOINT;
 
 	//RequestedConnectionStruct *rcs = (RequestedConnectionStruct *) rakMalloc_Ex(sizeof(RequestedConnectionStruct), _FILE_AND_LINE_);
 	RequestedConnectionStruct* rcs = RakNet::OP_NEW< RequestedConnectionStruct >(_FILE_AND_LINE_);
@@ -3210,13 +3210,13 @@ ConnectionAttemptResult RakPeer::SendConnectionRequest(const char* host, unsigne
 			// Not necessary
 			//RakNet::OP_DELETE(rcs->client_handshake,_FILE_AND_LINE_);
 			RakNet::OP_DELETE(rcs, _FILE_AND_LINE_);
-			return CONNECTION_ATTEMPT_ALREADY_IN_PROGRESS;
+			return  ConnectionAttemptResult::CONNECTION_ATTEMPT_ALREADY_IN_PROGRESS;
 		}
 	}
 	requestedConnectionQueue.Push(rcs, _FILE_AND_LINE_);
 	requestedConnectionQueueMutex.Unlock();
 
-	return CONNECTION_ATTEMPT_STARTED;
+	return  ConnectionAttemptResult::CONNECTION_ATTEMPT_STARTED;
 }
 ConnectionAttemptResult RakPeer::SendConnectionRequest(const char* host, unsigned short remotePort, const char* passwordData, int passwordDataLength, PublicKey* publicKey, unsigned connectionSocketIndex, unsigned int extraData, unsigned sendConnectionAttemptCount, unsigned timeBetweenSendConnectionAttemptsMS, RakNet::TimeMS timeoutTime, RakNetSocket2* socket)
 {
@@ -3226,7 +3226,7 @@ ConnectionAttemptResult RakPeer::SendConnectionRequest(const char* host, unsigne
 
 	// Already connected?
 	if (GetRemoteSystemFromSystemAddress(systemAddress, false, true))
-		return ALREADY_CONNECTED_TO_ENDPOINT;
+		return  ConnectionAttemptResult::ALREADY_CONNECTED_TO_ENDPOINT;
 
 	//RequestedConnectionStruct *rcs = (RequestedConnectionStruct *) rakMalloc_Ex(sizeof(RequestedConnectionStruct), _FILE_AND_LINE_);
 	RequestedConnectionStruct* rcs = RakNet::OP_NEW< RequestedConnectionStruct >(_FILE_AND_LINE_);
@@ -3264,13 +3264,13 @@ ConnectionAttemptResult RakPeer::SendConnectionRequest(const char* host, unsigne
 			// Not necessary
 			//RakNet::OP_DELETE(rcs->client_handshake,_FILE_AND_LINE_);
 			RakNet::OP_DELETE(rcs, _FILE_AND_LINE_);
-			return CONNECTION_ATTEMPT_ALREADY_IN_PROGRESS;
+			return  ConnectionAttemptResult::CONNECTION_ATTEMPT_ALREADY_IN_PROGRESS;
 		}
 	}
 	requestedConnectionQueue.Push(rcs, _FILE_AND_LINE_);
 	requestedConnectionQueueMutex.Unlock();
 
-	return CONNECTION_ATTEMPT_STARTED;
+	return  ConnectionAttemptResult::CONNECTION_ATTEMPT_STARTED;
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 void RakPeer::ValidateRemoteSystemLookup(void) const
