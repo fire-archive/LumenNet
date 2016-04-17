@@ -71,7 +71,7 @@ int main(void)
 
 	// The server has to be started to respond to pings.
 	RakNet::SocketDescriptor socketDescriptor(atoi(portstring),0);
-	bool b = server->Startup(2, &socketDescriptor, 1)==RakNet::RAKNET_STARTED;
+	bool b = server->Startup(2, &socketDescriptor, 1)==RakNet::StartupResult::RAKNET_STARTED;
 	server->SetMaximumIncomingConnections(2);
 	if (b)
 		puts("Server started, waiting for connections.");
